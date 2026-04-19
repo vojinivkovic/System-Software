@@ -4,7 +4,7 @@
 
 #include <cstdlib>
 #include <cstdint>
-
+#include "string_table.hpp"
 
 class Section
 {
@@ -18,6 +18,7 @@ public:
 private:
   size_t name, locationCounter;
   uint8_t * content;
+  static StringTable* tableOfSectionString;
 
 };
 

@@ -4,14 +4,20 @@
 #include <cstdlib>
 #include <vector>
 #include "symbol.hpp"
+#include "string_table.hpp"
 
 class SymbolTable
 {
 public:
-  SymbolTable() = default;
+  SymbolTable() = delete;
+  SymbolTable(const SymbolTable& table) = delete;
+  SymbolTable& operator=(const SymbolTable& table) = delete;
+
+  static int addSymbol();
 private:
   static size_t currentSection;
-  std::vector<Symbol*> table;
+  static std::vector<Symbol*> table;
+  static StringTable* tableOfSymbolString;
 };
 
 #endif
