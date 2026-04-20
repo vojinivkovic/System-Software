@@ -1,12 +1,28 @@
-#include <stdio.h>
+#ifndef _ASSEMBLER_HPP_
+#define _ASSEMBLER_HPP_
+
+
+#include <vector>
+#include "section.hpp"
 
 class Assembler
 {
 public:
-  Assembler();
+  Assembler() = delete;
+  Assembler(const Assembler& assembler) = delete;
+  Assembler& operator=(const Assembler& assembler) = delete;
+  static void initializeAssembler();
+  static Section* getCurrentSection();
+  static void addSection(Section* newSection) { arrayOfSections.push_back(newSection); }
+  static void setCurrentSection(Section* newSection) { currentSection = newSection; }
+  static size_t getNumberOfSections() { return arrayOfSections.size(); }
+  static Section* findSection(size_t nameOfSection);
+
 private:
-  
+  static Section* currentSection;
+  static std::vector<Section*> arrayOfSections;
 
 };
 
-Assembler assemblerTool;
+
+#endif

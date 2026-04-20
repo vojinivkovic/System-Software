@@ -44,7 +44,7 @@ int yylex();
 
 ".end" {
           yylval.field = strdup(yytext + 1); 
-          return DIRECTIVE;
+          return END;
         }
 
 
@@ -229,12 +229,23 @@ int yylex();
 
 
 \"([^\"\\]|\\.)*\" {
-    int len = yyleng;
-    char* s = malloc(len - 1);
-    strncpy(s, yytext + 1, len - 2);
-    s[len - 2] = '\0';
-    yylval.field = s;
+    yylval.field = strdup(yytext);
     return STRING;
+}
+
+"$" {
+  yylval.field = strdup(yytext);
+  return '$';
+}
+
+"\[" {
+  yylval.field = strdup(yytext);
+  return '[';
+} 
+
+"\]" {
+  yylval.field = strdup(yytext);
+  return ']';
 }
 
 "#".* ;

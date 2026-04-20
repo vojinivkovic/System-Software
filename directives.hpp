@@ -1,0 +1,19 @@
+#ifndef _DIRECTIVES_HPP_
+#define _DIRECTIVES_HPP_
+
+#include <unordered_map>
+#include <string>
+#include "directive_functions.hpp"
+#include <vector>
+
+class Directives
+{
+public:
+  Directives() = delete;
+  static void execute(const std::string& directive_name, const std::string& arguments);
+private:
+  static std::unordered_map<std::string, void (*)(const std::string&)> tableOfDirectives;
+  
+};
+
+#endif

@@ -16,8 +16,9 @@ public:
   };
 
   StringTable(STType tableType) : type(tableType) {}
-  void addString(const char* name);
+  void addString(const std::string& name);
   size_t getOffset() { return tableOfNames.size(); }
+  std::string::size_type findString(const std::string& name);
 
 private:
   STType type;
