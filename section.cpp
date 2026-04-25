@@ -1,6 +1,8 @@
 #include "section.hpp"
 #include "assembler.hpp"
 #include "symbol_table.hpp"
+#include "instructions.hpp"
+#include "auxiliary.hpp"
 
 StringTable* Section::tableOfSectionString = new StringTable(StringTable::STType::SectionName);
 
@@ -11,6 +13,15 @@ Section::Section(const std::string& sectionName) : name(tableOfSectionString->ge
   table->addString(sectionName);
   SymbolTable::addSymbol(newSymbol);
   tableOfSectionString->addString(sectionName);
+}
+
+
+int Section::translateInstruction(const std::string &instruction, const std::vector<Argument> &arguments)
+{
+  std::vector<uint8_t> binaryInstruction = Instructions::translate(instruction, arguments);
+  content.insert(content.end(), binaryInstruction.rbegin(), binaryInstruction.rend());
+  locationCounter += 4;
+  return 0;
 }
 
 int Section::executeDirective(const std::string &line)

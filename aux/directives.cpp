@@ -1,11 +1,12 @@
 #include "directives.hpp"
+#include "directive_functions.hpp"
 
 std::unordered_map<std::string, void (*)(const std::string&)> Directives::tableOfDirectives = {
-  {"global", directive_global},
-  {"section", directive_section},
-  {"extern", directive_extern},
-  {"skip", directive_skip},
-  {"ascii", directive_ascii}
+  {"global", directiveGlobal},
+  {"section", directiveSection},
+  {"extern", directiveExtern},
+  {"skip", directiveSkip},
+  {"ascii", directiveAscii}
 };
 
 void Directives::execute(const std::string& directive_name, const std::string& arguments)

@@ -36,7 +36,7 @@ static int getSizeOfMemory(const std::string& argument)
   }
 }
 
-void directive_section(const std::string &arguments)
+void directiveSection(const std::string &arguments)
 {
   std::string::size_type findName = Section::getStringTable()->findString(arguments);
   if(findName == std::string::npos)
@@ -54,7 +54,7 @@ void directive_section(const std::string &arguments)
   return;
 }
 
-void directive_global(const std::string& arguments)
+void directiveGlobal(const std::string& arguments)
 {
   std::vector<std::string> listOfArguments = parseArguments(arguments);
   for(auto iArgument : listOfArguments)
@@ -76,7 +76,7 @@ void directive_global(const std::string& arguments)
   }
 }
 
-void directive_extern(const std::string& arguments)
+void directiveExtern(const std::string& arguments)
 {
   std::vector<std::string> listOfArguments = parseArguments(arguments);
   for(auto iArgument : listOfArguments)
@@ -102,7 +102,7 @@ void directive_extern(const std::string& arguments)
 }
 
 
-void directive_skip(const std::string& arguments)
+void directiveSkip(const std::string& arguments)
 {
   int sizeOfAllocatedMemory = getSizeOfMemory(arguments);
   if(sizeOfAllocatedMemory == -1 )
@@ -116,7 +116,7 @@ void directive_skip(const std::string& arguments)
   currentSection->callocMemory(sizeOfAllocatedMemory);
 }
 
-void directive_ascii(const std::string& arguments)
+void directiveAscii(const std::string& arguments)
 {
   Section* currentSection = Assembler::getCurrentSection();
   currentSection->insertString(arguments);

@@ -8,13 +8,14 @@
 #include <vector>
 #include <string>
 #include "directives.hpp"
+#include "instructions.hpp"
 
 class Section
 {
 public:
   Section(const std::string& sectionName);
   size_t getLocationCounter() const { return locationCounter;}
-  int translateInstruction(const std::string& line);
+  int translateInstruction(const std::string& instruction, const std::vector<Argument>& arguments); 
   int executeDirective(const std::string& line);
   int copyContent();
   static StringTable* getStringTable() { return tableOfSectionString; }
