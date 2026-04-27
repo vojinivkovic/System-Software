@@ -1,11 +1,70 @@
 #include "instructions.hpp"
 #include "instructions_functions.hpp"
+#include "../macro/macro_table.hpp"
+#include "../symbol/symbol_table.hpp"
+#include "forward_reference.hpp"
+#include "../assembler.hpp"
+#include "../relocation/relocation_table.hpp"
 
-std::unordered_map<std::string, void (*)(const std::vector<std::string>& arguments)> Instructions::tableOfInstructions = {
-  {"halt", instruction_halt}
+std::unordered_map<std::string, std::vector<uint8_t> (*)(const std::vector<Argument>& arguments)> Instructions::tableOfInstructions = {
+  {"halt", instructionHalt},
+  {"int", instructrionSoftwareInterrupt}
 };
 
-void Instructions::translate(const std::string &instruction_name, const std::vector<std::string> &arguments)
+std::vector<uint8_t> Instructions::translate(const std::string &instruction_name, const std::vector<Argument> &arguments)
 {
-  tableOfInstructions[instruction_name](arguments);
+
+  return tableOfInstructions[instruction_name](arguments);
+}
+
+bool Instructions::resolveSymbol(const std::string &symbol, uint32_t* value)
+{
+  Symbol* tempSymbol = SymbolTable::findSymbol(symbol);
+  Macro* tempMacro = MacroTable::findMacro(symbol);
+  
+
+  if(!tempSymbol && !tempMacro)
+  {
+    Section* currentSection = Assembler::getCurrentSection();
+    ForwardReference* newForwardReference = new ForwardReference(currentSection->getIdxOfSection(), currentSection->getLocationCounter());
+
+    Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, 0, 0, 
+                                   Symbol::Binding::NoBinding, Symbol::Type::NoType, Symbol::Scope::NoScope, false, newForwardReference);
+    SymbolTable::addSymbol(symbol, newSymbol);
+    return false;
+  }
+  else if(tempSymbol)
+  {
+    if(tempSymbol->getDefined())
+    {
+      *value = tempSymbol->getValue();
+      Section* currentSection = Assembler::getCurrentSection();
+      RelocationEntry* newReloc = new RelocationEntry(currentSection->getLocationCounter(),
+                                                      currentSection->getIdxOfSection(), tempSymbol->getIdx(), 0);
+      
+      return true;
+    }
+    else
+    {
+      Section* currentSection = Assembler::getCurrentSection();
+      ForwardReference* newForwardReference = new ForwardReference(currentSection->getIdxOfSection(), currentSection->getLocationCounter());
+      tempSymbol->addForwardReference(newForwardReference);
+      return false;
+    }
+  }
+  else
+  {
+    if(tempMacro->getDefined())
+    {
+      *value = tempMacro->getValue();
+      return true;
+    }
+    else
+    {
+      Section* currentSection = Assembler::getCurrentSection();
+      ForwardReference* newForwardReference = new ForwardReference(currentSection->getIdxOfSection(), currentSection->getLocationCounter());
+      tempMacro->addForwardReference(newForwardReference);
+      return false;
+    }
+  }
 }
