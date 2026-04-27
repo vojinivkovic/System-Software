@@ -8,7 +8,27 @@
 
 std::unordered_map<std::string, std::vector<uint8_t> (*)(const std::vector<Argument>& arguments)> Instructions::tableOfInstructions = {
   {"halt", instructionHalt},
-  {"int", instructrionSoftwareInterrupt}
+  {"int", instructrionSoftwareInterrupt},
+  {"call", instructionCall},
+  {"jmp", instructionJump},
+  {"beq", instuctionJumpEqual},
+  {"bne", instuctionJumpNotEqual},
+  {"bgt", instuctionJumpGreater},
+  {"xchg", instructionAtomicExchange},
+  {"add", instructionAdd},
+  {"sub", instructionSub},
+  {"mul", instructionMul},
+  {"div", instructionDiv},
+  {"not", instructionNot},
+  {"and", instructionAnd},
+  {"or", instructionOr},
+  {"xor", instructionXor},
+  {"shl", instructionShiftLeft},
+  {"shr", instructionShiftRight},
+  {"push", instructionPush},
+  {"pop", instructionPop},
+  {"ret", instructionPop},
+  {"iret", instructionReturnFromInterrupt}
 };
 
 std::vector<uint8_t> Instructions::translate(const std::string &instruction_name, const std::vector<Argument> &arguments)

@@ -1,4 +1,4 @@
-#include "auxiliary.hpp"
+#include "auxiliary_func.hpp"
 
 std::vector<std::string> parseArguments(const std::string& arguments)
 {

@@ -3,7 +3,7 @@
 
 #include <cstdlib>
 #include <vector>
-#include "forward_reference.hpp"
+#include "../aux/forward_reference.hpp"
 
 
 class Symbol
@@ -29,15 +29,15 @@ public:
     Section
   };
 
-  Symbol(size_t idx_, 
-         size_t name_, 
-         size_t size_, 
-         size_t value_, 
-         size_t section_, 
-         Binding bind_, 
-         Type type_,
-         Scope scope_, 
-         bool defined_,
+  Symbol(const size_t& idx_, 
+         const size_t& name_, 
+         const size_t& size_, 
+         const size_t& value_, 
+         const size_t& section_, 
+         const Binding& bind_, 
+         const Type& type_,
+         const Scope& scope_, 
+         const bool& defined_,
          ForwardReference* fReference_ = nullptr) 
          : idx(idx_),
            name(name_),
@@ -65,7 +65,11 @@ public:
   Scope getScope() const { return scope; }
 
   bool getDefined() const { return defined; }
-private:
+  size_t getValue() const { return value; }
+  size_t getIdx() const { return idx; }
+
+  void addForwardReference(ForwardReference* newReference) { tableForwardReference.push_back(newReference); }
+private: 
   size_t idx, name, size, value, section;
   Binding bind;
   Type type;

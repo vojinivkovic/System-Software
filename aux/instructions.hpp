@@ -14,6 +14,7 @@ public:
   Instructions(const Instructions& instr) = delete;
   Instructions& operator=(const Instructions& instr) = delete;
   static std::vector<uint8_t> translate(const std::string& instruction_name, const std::vector<Argument>& arguments);
+  static bool resolveSymbol(const std::string& symbol, uint32_t* value);
 
 private:
   static std::unordered_map<std::string, std::vector<uint8_t> (*)(const std::vector<Argument>& arguments)> tableOfInstructions;

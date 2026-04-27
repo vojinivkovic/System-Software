@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <vector>
 #include "symbol.hpp"
-#include "string_table.hpp"
+#include "../aux/string_table.hpp"
 
 class SymbolTable
 {
@@ -12,10 +12,10 @@ public:
   SymbolTable() = delete;
   SymbolTable(const SymbolTable& table) = delete;
   SymbolTable& operator=(const SymbolTable& table) = delete;
-  static void addSymbol(Symbol* newSymbol) {table.push_back(newSymbol); }
-  static StringTable* getTableOfSymbolString() { return tableOfSymbolString; }
-  static size_t getSizeOfSymbolTable() { return table.size(); }
-  static Symbol* findSymbol(size_t name);
+  static void addSymbol(const std::string& name, Symbol* newSymbol);
+  static size_t getOffsetInTableOfSymbolString() { return tableOfSymbolString->getOffset(); }
+  static size_t getNewIdxInSymbolTable() { return table.size(); }
+  static Symbol* findSymbol(const std::string& name);
 
 private:
   static size_t currentSection;

@@ -10,14 +10,11 @@ enum class RelocationType
 class RelocationEntry
 {
 public:
-  RelocationEntry(size_t offset_, size_t idxSection_, size_t idxSymbol_, RelocationType type_ = RelocationType::Absolute) :
-  offset(offset_), idxSection(idxSection_), idxSymbol(idxSymbol_) 
-  {
-    
-  }
+  RelocationEntry(size_t offset_, size_t idxSection_, size_t idxSymbol_, size_t addend_, RelocationType type_ = RelocationType::Absolute) :
+  offset(offset_), idxSection(idxSection_), idxSymbol(idxSymbol_), addend(addend_) {}
 
 private:
-  size_t offset, idxSection, idxSymbol;
+  size_t offset, idxSection, idxSymbol, addend;
   RelocationType typeOfRelocations;
 };
 

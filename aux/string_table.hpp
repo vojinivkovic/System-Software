@@ -12,7 +12,8 @@ public:
   enum class STType 
   {
     SectionName,
-    SymbolName
+    SymbolName,
+    MacroName
   };
 
   StringTable(STType tableType) : type(tableType) {}

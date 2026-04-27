@@ -1,5 +1,42 @@
 #include "instructions_functions.hpp"
-#include "assembler.hpp"
+#include "../assembler.hpp"
+#include "instructions.hpp"
+
+enum class UnconditionalJumpType 
+{
+  Call,
+  Jump
+};
+
+enum class ConditionalJumpType 
+{
+  Equal,
+  NotEqual,
+  Greater
+};
+
+enum class ArithmeticOperationType
+{
+  Add,
+  Sub, 
+  Mul,
+  Div
+};
+
+enum class LogicalOpetaionType
+{
+  Not,
+  And,
+  Or, 
+  Xor
+};
+
+enum class ShiftOperationType
+{
+  Left, 
+  Right
+};
+
 
 std::vector<uint8_t> instructionHalt(const std::vector<Argument> &arguments)
 {
@@ -9,4 +46,294 @@ std::vector<uint8_t> instructionHalt(const std::vector<Argument> &arguments)
 std::vector<uint8_t> instructrionSoftwareInterrupt(const std::vector<Argument> &arguments)
 {
   return std::vector<uint8_t>{0x10, 0x00, 0x00, 0x00};
+}
+
+static std::vector<uint8_t> instructionJumpOrCall(const std::vector<Argument> &arguments, const UnconditionalJumpType& typeOfJump)
+{
+  std::vector<uint8_t> instr;
+  uint32_t operand;
+  Argument arg = arguments[0];
+  if(typeOfJump == UnconditionalJumpType::Call)
+  {
+    instr.push_back(0x20);
+  }
+  else
+  {
+    instr.push_back(0x30);
+  }
+  instr.push_back(0x00);
+
+  if(arg.type == ArgumentType::OperandLiteral)
+  {
+    switch (arg.variable[1])
+    {
+    case 'x': 
+    case 'X':
+      operand = stoul(arg.variable, nullptr, 16);
+      break;
+    case 'b':
+    case 'B':
+      operand = stoul(arg.variable.substr(2), nullptr, 2);
+      break;
+    default:
+      operand = stoul(arg.variable);
+      break;
+    }
+    instr.push_back(operand >> 8 & 0xFF);
+    instr.push_back(operand & 0xFF);
+  }  
+  else
+  {
+    if(Instructions::resolveSymbol(arg.variable, &operand))
+    {
+      instr.push_back(operand >> 8 & 0x0F);
+      instr.push_back(operand & 0xFF);
+    }
+    else
+    {
+      instr.push_back(0x00);
+      instr.push_back(0x00);
+    }
+  }
+  return instr;
+}
+
+std::vector<uint8_t> instructionJump(const std::vector<Argument> &arguments)
+{
+  return instructionJumpOrCall(arguments, UnconditionalJumpType::Jump);
+}
+
+std::vector<uint8_t> instructionCall(const std::vector<Argument> &arguments)
+{
+  return instructionJumpOrCall(arguments, UnconditionalJumpType::Call);
+}
+
+static std::vector<uint8_t> instructionConditionalJump(const std::vector<Argument> &arguments, const ConditionalJumpType &typeOfJump)
+{
+  std::vector<uint8_t> instr;
+  uint32_t operand;
+  switch (typeOfJump)
+  {
+  case ConditionalJumpType::Equal:
+    instr.push_back(0x31);
+    break;
+  case ConditionalJumpType::NotEqual:
+    instr.push_back(0x32);
+    break;
+  
+  case ConditionalJumpType::Greater:
+    instr.push_back(0x33);
+    break;
+  }
+
+  instr.push_back(arguments[0].registerNum);
+
+  if(Instructions::resolveSymbol(arguments[2].variable, &operand))
+  {
+    instr.push_back((arguments[1].registerNum << 4) | (operand >> 8 & 0x0F));
+    instr.push_back(operand & 0XFF);
+  }
+  else
+  {
+    instr.push_back(arguments[1].registerNum << 4);
+    instr.push_back(0x00);
+  }
+
+  return instr;
+
+}
+
+std::vector<uint8_t> instuctionJumpEqual(const std::vector<Argument> &arguments)
+{
+  return instructionConditionalJump(arguments, ConditionalJumpType::Equal);
+}
+
+std::vector<uint8_t> instuctionJumpNotEqual(const std::vector<Argument> &arguments)
+{
+  return instructionConditionalJump(arguments, ConditionalJumpType::NotEqual);
+}
+
+std::vector<uint8_t> instuctionJumpGreater(const std::vector<Argument> &arguments)
+{
+  return instructionConditionalJump(arguments, ConditionalJumpType::Greater);
+}
+
+std::vector<uint8_t> instructionAtomicExchange(const std::vector<Argument> &arguments)
+{
+  std::vector<uint8_t> instr{0x40};
+  instr.push_back(arguments[0].registerNum);
+  instr.push_back(arguments[1].registerNum << 4);
+  instr.push_back(0x00);
+  return instr;
+}
+
+
+static std::vector<uint8_t> instructionArithmeticOperation(const std::vector<Argument>& arguments, const ArithmeticOperationType& typeOfOperation)
+{
+  std::vector<uint8_t> instr;
+  switch (typeOfOperation)
+  {
+  case ArithmeticOperationType::Add:
+    instr.push_back(0x50);
+    break;
+
+  case ArithmeticOperationType::Sub:
+    instr.push_back(0x51);
+    break;
+
+  case ArithmeticOperationType::Mul:
+    instr.push_back(0x52);
+    break;
+  
+  case ArithmeticOperationType::Div:
+    instr.push_back(0x53);
+    break;
+  }
+  instr.push_back((arguments[1].registerNum << 4) | arguments[1].registerNum);
+  instr.push_back(arguments[0].registerNum << 4);
+  instr.push_back(0x00);
+
+  return instr;
+}
+
+std::vector<uint8_t> instructionAdd(const std::vector<Argument> &arguments)
+{
+  return instructionArithmeticOperation(arguments, ArithmeticOperationType::Add);
+}
+
+std::vector<uint8_t> instructionSub(const std::vector<Argument> &arguments)
+{
+  return instructionArithmeticOperation(arguments, ArithmeticOperationType::Sub);
+}
+
+std::vector<uint8_t> instructionMul(const std::vector<Argument> &arguments)
+{
+  return instructionArithmeticOperation(arguments, ArithmeticOperationType::Mul);
+}
+
+std::vector<uint8_t> instructionDiv(const std::vector<Argument> &arguments)
+{
+  return instructionArithmeticOperation(arguments, ArithmeticOperationType::Div);
+}
+
+
+
+static std::vector<uint8_t> instructionLogicalOperation(const std::vector<Argument> &arguments, const LogicalOpetaionType& typeOfOperation)
+{
+  std::vector<uint8_t> instr;
+  switch (typeOfOperation)
+  {
+  case LogicalOpetaionType::Not:
+    instr.push_back(0x60);
+    break;
+  case LogicalOpetaionType::And:
+    instr.push_back(0x61);
+    break;
+  case LogicalOpetaionType::Or:
+    instr.push_back(0x62);
+    break;
+  case LogicalOpetaionType::Xor:
+    instr.push_back(0x63);
+    break;
+  }
+  if(typeOfOperation == LogicalOpetaionType::Not)
+  {
+    instr.push_back((arguments[0].registerNum << 4) | arguments[0].registerNum);
+    instr.push_back(0x00);
+  }
+  else
+  {
+    instr.push_back((arguments[1].registerNum << 4) | arguments[1].registerNum);
+    instr.push_back(arguments[0].registerNum << 4);
+  }
+  
+  instr.push_back(0x00);
+
+  return instr;
+}
+
+std::vector<uint8_t> instructionNot(const std::vector<Argument> &arguments)
+{
+  return instructionLogicalOperation(arguments, LogicalOpetaionType::Not);
+}
+
+std::vector<uint8_t> instructionAnd(const std::vector<Argument> &arguments)
+{
+  return instructionLogicalOperation(arguments, LogicalOpetaionType::And);
+}
+
+std::vector<uint8_t> instructionOr(const std::vector<Argument> &arguments)
+{
+  return instructionLogicalOperation(arguments, LogicalOpetaionType::Or);
+}
+
+std::vector<uint8_t> instructionXor(const std::vector<Argument> &arguments)
+{
+  return instructionLogicalOperation(arguments, LogicalOpetaionType::Xor);
+}
+
+
+
+static std::vector<uint8_t> instructionShiftOperation(const std::vector<Argument> &arguments, const ShiftOperationType& typeOfOperation)
+{
+  std::vector<uint8_t> instr;
+  switch(typeOfOperation)
+  {
+    case ShiftOperationType::Left:
+    instr.push_back(0x70);
+    break;
+
+    case ShiftOperationType::Right:
+    instr.push_back(0x71);
+    break;
+  }
+  instr.push_back((arguments[1].registerNum << 4) | arguments[1].registerNum);
+  instr.push_back(arguments[0].registerNum << 4);
+  instr.push_back(0x00);
+
+  return instr;
+}
+
+std::vector<uint8_t> instructionShiftLeft(const std::vector<Argument> &arguments)
+{
+  return instructionShiftOperation(arguments, ShiftOperationType::Left);
+}
+
+std::vector<uint8_t> instructionShiftRight(const std::vector<Argument> &arguments)
+{
+  return instructionShiftOperation(arguments, ShiftOperationType::Right);
+}
+
+std::vector<uint8_t> instructionPush(const std::vector<Argument> &arguments)
+{
+  std::vector<uint8_t> instr{0x81, 0xE0};
+  instr.push_back((arguments[0].registerNum << 4) | 0xF);
+  instr.push_back(0xFC);
+  return instr;
+}
+
+std::vector<uint8_t> instructionPop(const std::vector<Argument> &arguments)
+{
+  std::vector<uint8_t> instr{0x93};
+  instr.push_back((arguments[0].registerNum << 4) | 0xE);
+  instr.push_back(0x00);
+  instr.push_back(0x04);
+  return instr;
+}
+
+std::vector<uint8_t> instructionReturnFromInterrupt(const std::vector<Argument> &arguments)
+{
+  // POP PC;
+  std::vector<uint8_t> instr{0x93};
+  instr.push_back((0xF << 4) | 0xE);
+  instr.push_back(0x00);
+  instr.push_back(0x04);
+
+  //POP STATUS
+  instr.push_back(0x97);
+  instr.push_back(0x0E);
+  instr.push_back(0x00);
+  instr.push_back(0x04);
+
+  return instr;
 }

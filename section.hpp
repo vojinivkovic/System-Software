@@ -4,17 +4,18 @@
 
 #include <cstdlib>
 #include <cstdint>
-#include "string_table.hpp"
+#include "aux/string_table.hpp"
 #include <vector>
 #include <string>
-#include "directives.hpp"
-#include "instructions.hpp"
+#include "aux/directives.hpp"
+#include "aux/instructions.hpp"
 
 class Section
 {
 public:
   Section(const std::string& sectionName);
   size_t getLocationCounter() const { return locationCounter;}
+  size_t getIdxOfSection() const { return idxSection; }
   int translateInstruction(const std::string& instruction, const std::vector<Argument>& arguments); 
   int executeDirective(const std::string& line);
   int copyContent();
@@ -30,6 +31,7 @@ private:
   static StringTable* tableOfSectionString;
 
 };
+
 
 
 #endif

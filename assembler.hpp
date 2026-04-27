@@ -12,7 +12,7 @@ public:
   Assembler(const Assembler& assembler) = delete;
   Assembler& operator=(const Assembler& assembler) = delete;
   static void initializeAssembler();
-  static Section* getCurrentSection();
+  static Section* getCurrentSection() { return currentSection; };
   static void addSection(Section* newSection) { arrayOfSections.push_back(newSection); }
   static void setCurrentSection(Section* newSection) { currentSection = newSection; }
   static size_t getNumberOfSections() { return arrayOfSections.size(); }

@@ -1,9 +1,9 @@
 #include "directive_functions.hpp"
-#include "section.hpp"
-#include "assembler.hpp"
-#include "symbol_table.hpp"
+#include "../section.hpp"
+#include "../assembler.hpp"
+#include "../symbol/symbol_table.hpp"
 #include <iostream>
-#include "auxiliary.hpp"
+#include "auxiliary_func.hpp"
 
 
 static int getSizeOfMemory(const std::string& argument)
@@ -59,17 +59,14 @@ void directiveGlobal(const std::string& arguments)
   std::vector<std::string> listOfArguments = parseArguments(arguments);
   for(auto iArgument : listOfArguments)
   {
-    std::string::size_type findName = SymbolTable::getTableOfSymbolString()->findString(iArgument);
-    if(findName == std::string::npos)
+    Symbol* tempSymbol = SymbolTable::findSymbol(iArgument);
+    if(tempSymbol == nullptr)
     {
-      StringTable* table = SymbolTable::getTableOfSymbolString();
-      Symbol* newSymbol = new Symbol(SymbolTable::getSizeOfSymbolTable(), table->getOffset(), 0, 0, 0, Symbol::Binding::Export, Symbol::Type::NoType, Symbol::Scope::Global, false);
-      table->addString(iArgument);
-      SymbolTable::addSymbol(newSymbol);
+      Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, 0, 0, Symbol::Binding::Export, Symbol::Type::NoType, Symbol::Scope::Global, false);
+      SymbolTable::addSymbol(iArgument,newSymbol);
     }
     else
     {
-      Symbol* tempSymbol = SymbolTable::findSymbol(findName);
       tempSymbol->setBinding(Symbol::Binding::Export);
       tempSymbol->setScope(Symbol::Scope::Global);
     }
@@ -81,17 +78,14 @@ void directiveExtern(const std::string& arguments)
   std::vector<std::string> listOfArguments = parseArguments(arguments);
   for(auto iArgument : listOfArguments)
   {
-    std::string::size_type findName = SymbolTable::getTableOfSymbolString()->findString(iArgument);
-    if(findName == std::string::npos)
+    Symbol* tempSymbol = SymbolTable::findSymbol(iArgument);
+    if(tempSymbol == nullptr)
     {
-      StringTable* table = SymbolTable::getTableOfSymbolString();
-      Symbol* newSymbol = new Symbol(SymbolTable::getSizeOfSymbolTable(), table->getOffset(), 0, 0, 0, Symbol::Binding::Import, Symbol::Type::NoType, Symbol::Scope::Global, false);
-      table->addString(iArgument);
-      SymbolTable::addSymbol(newSymbol);
+      Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, 0, 0, Symbol::Binding::Import, Symbol::Type::NoType, Symbol::Scope::Global, false);
+      SymbolTable::addSymbol(iArgument, newSymbol);
     }
     else
     {
-      Symbol* tempSymbol = SymbolTable::findSymbol(findName);
       if(tempSymbol->getDefined() || tempSymbol->getScope() == Symbol::Scope::Local || 
           (tempSymbol->getScope() == Symbol::Scope::Global && tempSymbol->getBinding() == Symbol::Binding::Export))
       {

@@ -1,17 +1,16 @@
 #include "section.hpp"
 #include "assembler.hpp"
-#include "symbol_table.hpp"
-#include "instructions.hpp"
-#include "auxiliary.hpp"
+#include "symbol/symbol_table.hpp"
+#include "aux/instructions.hpp"
+#include "aux/auxiliary_func.hpp"
 
 StringTable* Section::tableOfSectionString = new StringTable(StringTable::STType::SectionName);
 
 Section::Section(const std::string& sectionName) : name(tableOfSectionString->getOffset()), locationCounter(0), idxSection(Assembler::getNumberOfSections())
 { 
-  StringTable* table = SymbolTable::getTableOfSymbolString();
-  Symbol* newSymbol = new Symbol(SymbolTable::getSizeOfSymbolTable(), table->getOffset(), 0, 0, idxSection, Symbol::Binding::NoBinding, Symbol::Type::Section, Symbol::Scope::NoScope, true);
-  table->addString(sectionName);
-  SymbolTable::addSymbol(newSymbol);
+  
+  Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, 0, idxSection, Symbol::Binding::NoBinding, Symbol::Type::Section, Symbol::Scope::NoScope, true);
+  SymbolTable::addSymbol(sectionName, newSymbol);
   tableOfSectionString->addString(sectionName);
 }
 
@@ -19,8 +18,25 @@ Section::Section(const std::string& sectionName) : name(tableOfSectionString->ge
 int Section::translateInstruction(const std::string &instruction, const std::vector<Argument> &arguments)
 {
   std::vector<uint8_t> binaryInstruction = Instructions::translate(instruction, arguments);
-  content.insert(content.end(), binaryInstruction.rbegin(), binaryInstruction.rend());
-  locationCounter += 4;
+  if(instruction != "iret")
+  {
+    content.insert(content.end(), binaryInstruction.rbegin(), binaryInstruction.rend());
+    locationCounter += 4;
+  }
+  else
+  {
+    for(int i = 3; i >= 0; i--)
+    {
+      content.push_back(binaryInstruction[i]);
+    }
+    for(int i = 7; i >= 4; i--)
+    {
+      content.push_back(binaryInstruction[i]);
+    }
+    locationCounter += 8;
+  }
+  
+  
   return 0;
 }
 
