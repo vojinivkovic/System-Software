@@ -76,4 +76,8 @@ std::vector<uint8_t> instructionPush(const std::vector<Argument>& arguments);
 std::vector<uint8_t> instructionPop(const std::vector<Argument>& arguments);
 
 std::vector<uint8_t> instructionReturnFromInterrupt(const std::vector<Argument>& arguments);
+
+std::vector<uint8_t> instructionReadFromCSRegister(const std::vector<Argument>& arguments);
+
+std::vector<uint8_t> instructionWriteToCSRegister(const std::vector<Argument>& arguments);
 #endif

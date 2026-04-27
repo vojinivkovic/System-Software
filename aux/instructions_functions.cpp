@@ -337,3 +337,22 @@ std::vector<uint8_t> instructionReturnFromInterrupt(const std::vector<Argument> 
 
   return instr;
 }
+
+std::vector<uint8_t> instructionReadFromCSRegister(const std::vector<Argument> &arguments)
+{
+  std::vector<uint8_t> instr{0x90};
+  instr.push_back((arguments[1].registerNum << 4) | arguments[0].registerNum);
+  instr.push_back(0x00);
+  instr.push_back(0x00);
+  return instr;
+}
+
+std::vector<uint8_t> instructionWriteToCSRegister(const std::vector<Argument> &arguments)
+{
+
+  std::vector<uint8_t> instr{0x94};
+  instr.push_back((arguments[1].registerNum << 4) | arguments[0].registerNum);
+  instr.push_back(0x00);
+  instr.push_back(0x00);
+  return instr;
+}

@@ -28,7 +28,9 @@ std::unordered_map<std::string, std::vector<uint8_t> (*)(const std::vector<Argum
   {"push", instructionPush},
   {"pop", instructionPop},
   {"ret", instructionPop},
-  {"iret", instructionReturnFromInterrupt}
+  {"iret", instructionReturnFromInterrupt},
+  {"csrrd", instructionReadFromCSRegister},
+  {"csrwr", instructionWriteToCSRegister}
 };
 
 std::vector<uint8_t> Instructions::translate(const std::string &instruction_name, const std::vector<Argument> &arguments)
