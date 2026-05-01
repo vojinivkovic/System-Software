@@ -9,6 +9,7 @@
 #include <string>
 #include "aux/directives.hpp"
 #include "aux/instructions.hpp"
+#include "aux/directive_functions.hpp"
 
 class Section
 {
@@ -17,13 +18,15 @@ public:
   size_t getLocationCounter() const { return locationCounter;}
   size_t getIdxOfSection() const { return idxSection; }
   int translateInstruction(const std::string& instruction, const std::vector<Argument>& arguments); 
-  int executeDirective(const std::string& line);
+  int executeDirective(const std::string& command, const std::vector<MacroParameter>& parameters);
   int copyContent();
   static StringTable* getStringTable() { return tableOfSectionString; }
+  static std::string::size_type findSectionInStringTable(const std::string& sectionName) { return tableOfSectionString->findString(sectionName); }
   size_t getSectionName() const { return name; }
   std::vector<uint8_t> getContent() const { return content; }
   void callocMemory(size_t sizeOfAllocation);
   void insertString(const std::string& stringToInsert);
+  void insertContent(const uint32_t& value);
 
 private:
   size_t name, locationCounter, idxSection;

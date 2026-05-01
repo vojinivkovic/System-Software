@@ -30,7 +30,9 @@ std::unordered_map<std::string, std::vector<uint8_t> (*)(const std::vector<Argum
   {"ret", instructionPop},
   {"iret", instructionReturnFromInterrupt},
   {"csrrd", instructionReadFromCSRegister},
-  {"csrwr", instructionWriteToCSRegister}
+  {"csrwr", instructionWriteToCSRegister},
+  {"st", instructionStore},
+  {"ld", instructionLoad}
 };
 
 std::vector<uint8_t> Instructions::translate(const std::string &instruction_name, const std::vector<Argument> &arguments)

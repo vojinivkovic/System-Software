@@ -6,42 +6,12 @@
 #include "auxiliary_func.hpp"
 
 
-static int getSizeOfMemory(const std::string& argument)
+void directiveSection(const std::vector<MacroParameter>& parameters)
 {
-  std::string tempString = argument;
-
-  if(tempString[0] == '-')
-  {
-    return -1; 
-  }
-
-  if(tempString[0] == '+')
-  {
-    tempString = tempString.substr(1);
-  }
-
-  if(tempString[1] == 'x' || tempString[1] == 'X')
-  {
-    tempString = tempString.substr(2);
-    return std::stoi(tempString, nullptr, 16);
-  }
-  else if(tempString[1] == 'b' || tempString[1] == 'B')
-  {
-    tempString = tempString.substr(2);
-    return std::stoi(tempString, nullptr, 2);
-  }
-  else
-  {
-    return std::stoi(tempString, nullptr, 10);
-  }
-}
-
-void directiveSection(const std::string &arguments)
-{
-  std::string::size_type findName = Section::getStringTable()->findString(arguments);
+  std::string::size_type findName = Section::findSectionInStringTable(parameters[0].stringValue);
   if(findName == std::string::npos)
   {
-    Section* newSection = new Section(arguments);
+    Section* newSection = new Section(parameters[0].stringValue);
     Assembler::addSection(newSection);
     Assembler::setCurrentSection(newSection);
     return;
@@ -54,16 +24,16 @@ void directiveSection(const std::string &arguments)
   return;
 }
 
-void directiveGlobal(const std::string& arguments)
+void directiveGlobal(const std::vector<MacroParameter>& parameters)
 {
-  std::vector<std::string> listOfArguments = parseArguments(arguments);
-  for(auto iArgument : listOfArguments)
+  //std::vector<std::string> listOfArguments = parseArguments(arguments);
+  for(auto iParameter : parameters)
   {
-    Symbol* tempSymbol = SymbolTable::findSymbol(iArgument);
+    Symbol* tempSymbol = SymbolTable::findSymbol(iParameter.stringValue);
     if(tempSymbol == nullptr)
     {
       Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, 0, 0, Symbol::Binding::Export, Symbol::Type::NoType, Symbol::Scope::Global, false);
-      SymbolTable::addSymbol(iArgument,newSymbol);
+      SymbolTable::addSymbol(iParameter.stringValue,newSymbol);
     }
     else
     {
@@ -73,16 +43,16 @@ void directiveGlobal(const std::string& arguments)
   }
 }
 
-void directiveExtern(const std::string& arguments)
+void directiveExtern(const std::vector<MacroParameter>& parameters)
 {
-  std::vector<std::string> listOfArguments = parseArguments(arguments);
-  for(auto iArgument : listOfArguments)
+  //std::vector<std::string> listOfArguments = parseArguments(arguments);
+  for(auto iParameter : parameters)
   {
-    Symbol* tempSymbol = SymbolTable::findSymbol(iArgument);
+    Symbol* tempSymbol = SymbolTable::findSymbol(iParameter.stringValue);
     if(tempSymbol == nullptr)
     {
       Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, 0, 0, Symbol::Binding::Import, Symbol::Type::NoType, Symbol::Scope::Global, false);
-      SymbolTable::addSymbol(iArgument, newSymbol);
+      SymbolTable::addSymbol(iParameter.stringValue, newSymbol);
     }
     else
     {
@@ -95,10 +65,34 @@ void directiveExtern(const std::string& arguments)
   }
 }
 
-
-void directiveSkip(const std::string& arguments)
+void directiveWord(const std::vector<MacroParameter> &parameters)
 {
-  int sizeOfAllocatedMemory = getSizeOfMemory(arguments);
+
+  uint32_t value;
+  Section* currSection = Assembler::getCurrentSection();
+  for(auto iParameter: parameters)
+  {
+    if(iParameter.type == MacroParameterType::Symbol)
+    {
+      if(Instructions::resolveSymbol(iParameter.stringValue, &value))
+      {
+        currSection->insertContent(value);
+      }
+      else
+      {
+        currSection->insertContent(0);
+      }
+    }
+    else
+    {
+      currSection->insertContent(iParameter.integerValue);
+    }
+  }
+}
+
+void directiveSkip(const std::vector<MacroParameter>& parameters)
+{
+  int sizeOfAllocatedMemory = parameters[0].integerValue;
   if(sizeOfAllocatedMemory == -1 )
   {
     std::cout << "Literal can't be negative." << "\n";
@@ -110,9 +104,9 @@ void directiveSkip(const std::string& arguments)
   currentSection->callocMemory(sizeOfAllocatedMemory);
 }
 
-void directiveAscii(const std::string& arguments)
+void directiveAscii(const std::vector<MacroParameter>& parameters)
 {
   Section* currentSection = Assembler::getCurrentSection();
-  currentSection->insertString(arguments);
+  currentSection->insertString(parameters[0].stringValue);
 }
 

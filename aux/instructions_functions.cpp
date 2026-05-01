@@ -37,6 +37,25 @@ enum class ShiftOperationType
   Right
 };
 
+static uint32_t resolveLiteral(const std::string& literal)
+{
+  uint32_t operand;
+  switch (literal[1])
+  {
+    case 'x': 
+    case 'X':
+      operand = stoul(literal, nullptr, 16);
+      break;
+    case 'b':
+    case 'B':
+      operand = stoul(literal.substr(2), nullptr, 2);
+      break;
+    default:
+      operand = stoul(literal);
+      break;
+    }
+    return operand;
+}
 
 std::vector<uint8_t> instructionHalt(const std::vector<Argument> &arguments)
 {
@@ -65,20 +84,7 @@ static std::vector<uint8_t> instructionJumpOrCall(const std::vector<Argument> &a
 
   if(arg.type == ArgumentType::OperandLiteral)
   {
-    switch (arg.variable[1])
-    {
-    case 'x': 
-    case 'X':
-      operand = stoul(arg.variable, nullptr, 16);
-      break;
-    case 'b':
-    case 'B':
-      operand = stoul(arg.variable.substr(2), nullptr, 2);
-      break;
-    default:
-      operand = stoul(arg.variable);
-      break;
-    }
+    operand = resolveLiteral(arg.variable);
     instr.push_back(operand >> 8 & 0xFF);
     instr.push_back(operand & 0xFF);
   }  
@@ -355,4 +361,62 @@ std::vector<uint8_t> instructionWriteToCSRegister(const std::vector<Argument> &a
   instr.push_back(0x00);
   instr.push_back(0x00);
   return instr;
+}
+
+std::vector<uint8_t> instructionStore(const std::vector<Argument> &arguments)
+{
+  std::vector<uint8_t> instr;
+  uint32_t operand;
+  int signedOperand;
+  if(arguments[1].addressing == AddressingType::RegisterDirect)
+  {
+    instr.push_back(0x91);
+    instr.push_back((arguments[1].registerNum << 4) | arguments[0].registerNum);
+    instr.push_back(0x00);
+    instr.push_back(0x00);
+    return instr;
+  }
+
+  instr.push_back(0x80);
+  if(arguments[1].addressing == AddressingType::RegisterIndirect)
+  {
+    instr.push_back(arguments[1].registerNum << 4);
+  }
+  else
+  {
+    instr.push_back(0x00);
+  }
+
+  if(arguments[1].type == ArgumentType::Register)
+  {
+    instr.push_back(arguments[0].registerNum << 4);
+    instr.push_back(0x00);
+    return instr;
+  }
+  else
+  { 
+    if(arguments[1].type == ArgumentType::RegisterAndLiteral)
+    {
+      signedOperand = (int)resolveLiteral(arguments[1].variable);
+      instr.push_back((arguments[0].registerNum << 4) | ((uint32_t)signedOperand >> 8 & 0x0F));
+      instr.push_back((uint32_t)signedOperand & 0xFF);
+      return instr;
+    }
+    else
+    {
+      if(Instructions::resolveSymbol(arguments[1].variable, &operand))
+      {
+        instr.push_back((arguments[0].registerNum << 4) | (operand >> 8 & 0x0F));
+        instr.push_back(operand & 0xFF);
+      }
+      else
+      {
+        instr.push_back(arguments[0].registerNum << 4);
+        instr.push_back(0x00);
+      }
+      return instr;
+    }
+  
+  }
+
 }

@@ -40,13 +40,10 @@ int Section::translateInstruction(const std::string &instruction, const std::vec
   return 0;
 }
 
-int Section::executeDirective(const std::string &line)
+int Section::executeDirective(const std::string &command, const std::vector<MacroParameter>& parameters)
 {
-  std::string::size_type idxSeparator = line.find("/");
-  std::string command = line.substr(0, idxSeparator);
-  std::string arguments = line.substr(idxSeparator + 1);
 
-  Directives::execute(command, arguments);
+  Directives::execute(command, parameters);
 
   return 0;
 }
@@ -67,4 +64,13 @@ void Section::insertString(const std::string &stringToInsert)
     content.push_back(stringToInsert[i]);
   }
   content.push_back('\0');
+}
+
+void Section::insertContent(const uint32_t &value)
+{
+  locationCounter += 4;
+  content.push_back(value & 0xFF);
+  content.push_back((value >> 8) & 0xFF);
+  content.push_back((value >> 16) & 0xFF);
+  content.push_back((value >> 24) & 0xFF);
 }
