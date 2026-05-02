@@ -2,16 +2,39 @@
 #define _DIRECTIVE_FUNCTIONS_HPP_
 
 #include <string>
+#include <vector>
+#include "expression_tokens.hpp"
+#include "instructions.hpp"
 
-void directiveGlobal(const std::string& arguments);
+enum class MacroParameterType
+{
+  Literal, 
+  Symbol,
+  String,
+  Expression
+};
 
-void directiveSection(const std::string& arguments);
+struct MacroParameter
+{
+  MacroParameterType type; 
+  std::string stringValue;
+  int integerValue;
+  std::vector<Token> expression;
+};
 
-void directiveExtern(const std::string& arguments);
+void directiveGlobal(const std::vector<MacroParameter>& parameters);
 
-void directiveSkip(const std::string& arguments);
+void directiveSection(const std::vector<MacroParameter>& parameters);
 
-void directiveAscii(const std::string& arguments);
+void directiveExtern(const std::vector<MacroParameter>& parameters);
+
+void directiveWord(const std::vector<MacroParameter>& parameters);
+
+void directiveEqu(const std::vector<MacroParameter>& parameters);
+
+void directiveSkip(const std::vector<MacroParameter>& parameters);
+
+void directiveAscii(const std::vector<MacroParameter>& parameters);
 
 
 #endif

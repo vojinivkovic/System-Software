@@ -11,7 +11,9 @@ public:
   MacroTable() = delete;
   MacroTable(const MacroTable& table) = delete;
   MacroTable& operator=(const MacroTable& table) = delete;
+  static size_t getOffsetInTableOfMacroString() { return tableOfMacroString->getOffset(); }
   static Macro* findMacro(const std::string& name);
+  static void AddMacro(const std::string& name, Macro* newMacro);
 
 private:
   static std::vector<Macro*> table;

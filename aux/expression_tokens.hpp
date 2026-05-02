@@ -18,7 +18,7 @@ enum class TokenType
 struct Token
 {
   TokenType type;
-  uint32_t value;
+  int value;
   std::string symbol;
 };
 

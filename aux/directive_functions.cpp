@@ -4,6 +4,8 @@
 #include "../symbol/symbol_table.hpp"
 #include <iostream>
 #include "auxiliary_func.hpp"
+#include "../macro/macro_table.hpp"
+
 
 
 void directiveSection(const std::vector<MacroParameter>& parameters)
@@ -88,6 +90,37 @@ void directiveWord(const std::vector<MacroParameter> &parameters)
       currSection->insertContent(iParameter.integerValue);
     }
   }
+}
+
+void directiveEqu(const std::vector<MacroParameter> &parameters)
+{
+  std::string nameOfMacro = parameters[0].stringValue;
+  Symbol* tempSymbol = SymbolTable::findSymbol(nameOfMacro);
+  std::vector<std::string> dependencies;
+  if(MacroTable::findMacro(nameOfMacro))
+  {
+    std::cout << "Macro is already defined." << std::endl;
+    return;
+  }
+  if(tempSymbol)
+  {
+    if(tempSymbol->getDefined())
+    {
+      std::cout << "Symbol with the same name is already defined" << std::endl;
+      return;
+    }
+    SymbolTable::removeSymbolFromTable(tempSymbol);
+    for(auto iToken : parameters[0].expression)
+    {
+      if(iToken.type == TokenType::SYMBOL)
+      {
+        dependencies.push_back(iToken.symbol);
+      }
+    }
+    Macro* tempMacro = new Macro(MacroTable::getOffsetInTableOfMacroString(), parameters[1].expression,
+                                dependencies,tempSymbol->getForwardReference());
+  }
+
 }
 
 void directiveSkip(const std::vector<MacroParameter>& parameters)

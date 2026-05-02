@@ -68,6 +68,8 @@ public:
   size_t getValue() const { return value; }
   size_t getIdx() const { return idx; }
 
+  std::vector<ForwardReference*> getForwardReference() const { return tableForwardReference; }
+
   void addForwardReference(ForwardReference* newReference) { tableForwardReference.push_back(newReference); }
 private: 
   size_t idx, name, size, value, section;

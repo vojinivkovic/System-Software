@@ -1,7 +1,7 @@
 #include "directives.hpp"
 #include "directive_functions.hpp"
 
-std::unordered_map<std::string, void (*)(const std::string&)> Directives::tableOfDirectives = {
+std::unordered_map<std::string, void (*)(const std::vector<MacroParameter>&)> Directives::tableOfDirectives = {
   {"global", directiveGlobal},
   {"section", directiveSection},
   {"extern", directiveExtern},
@@ -9,8 +9,8 @@ std::unordered_map<std::string, void (*)(const std::string&)> Directives::tableO
   {"ascii", directiveAscii}
 };
 
-void Directives::execute(const std::string& directive_name, const std::string& arguments)
+void Directives::execute(const std::string& directive_name, const std::vector<MacroParameter>& parameters)
 {
-  tableOfDirectives[directive_name](arguments);
+  tableOfDirectives[directive_name](parameters);
 }
 

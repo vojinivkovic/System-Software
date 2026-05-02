@@ -25,3 +25,26 @@ Symbol *SymbolTable::findSymbol(const std::string &name)
     }
   }
 }
+
+void SymbolTable::removeSymbolFromTable(const Symbol *tempSymbol)
+{
+  for(auto it = table.begin(); it != table.end();)
+  {
+    if(*it == tempSymbol)
+    {
+      table.erase(it);
+      break;
+    }
+    it++;
+  }
+
+  size_t startName = tempSymbol->getName(), endName;
+
+  std::string namesOfSymbols = tableOfSymbolString->getNames();
+
+
+  for(endName = startName; namesOfSymbols[endName] != '\0'; endName++){}
+  endName++;
+  tableOfSymbolString->removeName(startName, endName);
+
+}

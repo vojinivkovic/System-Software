@@ -420,3 +420,61 @@ std::vector<uint8_t> instructionStore(const std::vector<Argument> &arguments)
   }
 
 }
+
+std::vector<uint8_t> instructionLoad(const std::vector<Argument> &arguments)
+{
+  std::vector<uint8_t> instr;
+  uint32_t operand;
+  int signedOperand;
+
+  uint8_t secondField = (arguments[1].registerNum << 4); 
+  if(arguments[0].addressing == AddressingType::RegisterDirect || arguments[0].addressing == AddressingType::Immediate)
+  {
+    instr.push_back(0x91);
+  }
+  else
+  {
+    instr.push_back(0x92);
+  }
+  
+  if(arguments[0].addressing == AddressingType::MemoryDirect || arguments[0].addressing == AddressingType::Immediate)
+  {
+    instr.push_back(secondField);
+  }
+  else
+  {
+    instr.push_back(secondField | arguments[0].registerNum);
+  }
+
+  if(arguments[0].addressing == AddressingType::RegisterDirect)
+  {
+    instr.push_back(0x00);
+    instr.push_back(0x00);
+  }
+  else
+  {
+    if(arguments[0].type == ArgumentType::OperandLiteral || arguments[0].type == ArgumentType::RegisterAndLiteral)
+    {
+
+      signedOperand = (int)resolveLiteral(arguments[1].variable);
+      instr.push_back((uint32_t)signedOperand >> 8 & 0x0F);
+      instr.push_back((uint32_t)signedOperand & 0xFF);
+    }
+    else
+    {
+      if(Instructions::resolveSymbol(arguments[1].variable, &operand))
+      {
+        instr.push_back(operand >> 8 & 0x0F);
+        instr.push_back(operand & 0xFF);
+      }
+      else
+      {
+        instr.push_back(0x00);
+        instr.push_back(0x00);
+      }
+
+    }
+
+  }
+  return instr;
+}
