@@ -6,7 +6,8 @@ std::unordered_map<std::string, void (*)(const std::vector<MacroParameter>&)> Di
   {"section", directiveSection},
   {"extern", directiveExtern},
   {"skip", directiveSkip},
-  {"ascii", directiveAscii}
+  {"ascii", directiveAscii},
+  {"equ", directiveEqu}
 };
 
 void Directives::execute(const std::string& directive_name, const std::vector<MacroParameter>& parameters)

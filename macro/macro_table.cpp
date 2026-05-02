@@ -20,3 +20,9 @@ Macro *MacroTable::findMacro(const std::string &name)
     }
   } 
 }
+
+void MacroTable::AddMacro(const std::string &name, Macro *newMacro)
+{
+  tableOfMacroString->addString(name);
+  table.push_back(newMacro);
+}

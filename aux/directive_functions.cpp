@@ -97,6 +97,15 @@ void directiveEqu(const std::vector<MacroParameter> &parameters)
   std::string nameOfMacro = parameters[0].stringValue;
   Symbol* tempSymbol = SymbolTable::findSymbol(nameOfMacro);
   std::vector<std::string> dependencies;
+  Macro* tempMacro;
+  for(auto iToken : parameters[1].expression)
+  {
+    if(iToken.type == TokenType::SYMBOL)
+    {
+      dependencies.push_back(iToken.symbol);
+    }
+  }
+
   if(MacroTable::findMacro(nameOfMacro))
   {
     std::cout << "Macro is already defined." << std::endl;
@@ -110,16 +119,19 @@ void directiveEqu(const std::vector<MacroParameter> &parameters)
       return;
     }
     SymbolTable::removeSymbolFromTable(tempSymbol);
-    for(auto iToken : parameters[0].expression)
-    {
-      if(iToken.type == TokenType::SYMBOL)
-      {
-        dependencies.push_back(iToken.symbol);
-      }
-    }
-    Macro* tempMacro = new Macro(MacroTable::getOffsetInTableOfMacroString(), parameters[1].expression,
+    
+    tempMacro = new Macro(MacroTable::getOffsetInTableOfMacroString(), parameters[1].expression,
                                 dependencies,tempSymbol->getForwardReference());
+    
   }
+  else
+  {
+    tempMacro = new Macro(MacroTable::getOffsetInTableOfMacroString(), parameters[1].expression,
+                                dependencies, {});
+  }
+
+  MacroTable::AddMacro(nameOfMacro, tempMacro);
+  return;
 
 }
 
