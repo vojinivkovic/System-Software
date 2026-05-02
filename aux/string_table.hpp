@@ -20,6 +20,8 @@ public:
   void addString(const std::string& name);
   size_t getOffset() { return tableOfNames.size(); }
   std::string::size_type findString(const std::string& name);
+  std::string getNames() const { return tableOfNames; }
+  void removeName(const size_t& start, const size_t& end) { tableOfNames.erase(start, end-start); }
 
 private:
   STType type;
