@@ -5,11 +5,23 @@
 #include <iostream>
 #include "auxiliary_func.hpp"
 #include "../macro/macro_table.hpp"
-
+#include "exceptions.hpp"
 
 
 void directiveSection(const std::vector<MacroParameter>& parameters)
 {
+  if(parameters.size() > 1)
+  {
+    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Directive [.section] can only have one argument", 
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+
+  }
+  if(parameters[0].type != MacroParameterType::Symbol)
+  {
+    throw AssemblerErrors(ErrorType::ErrorInavlidArgumentType, "Directive [.section] can only have argument that is symbol", 
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+  }
+  
   std::string::size_type findName = Section::findSectionInStringTable(parameters[0].stringValue);
   if(findName == std::string::npos)
   {
