@@ -2,6 +2,8 @@
 #include "../assembler.hpp"
 #include "instructions.hpp"
 #include "exceptions.hpp"
+#include "../symbol/symbol_table.hpp"
+#include "../macro/macro_table.hpp"
 
 enum class UnconditionalJumpType 
 {
@@ -64,12 +66,12 @@ static void exceptionInstructionConditionalJump(const std::vector<Argument>& arg
 
   if(arguments.size() > 3) 
   {
-    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Instruction [.beq/bne/bgt] except three arguments", 
+    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Instruction [.beq/bne/bgt] expects three arguments", 
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   }
   if(arguments.size() == 0) 
   {
-    throw AssemblerErrors(ErrorType::ErrorTooFewArguments, "Instruction [.beq/bne/bgt] except three argument",
+    throw AssemblerErrors(ErrorType::ErrorTooFewArguments, "Instruction [.beq/bne/bgt] expects three argument",
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   }
   if(arguments[0].type != ArgumentType::Register || arguments[1].type != ArgumentType::Register || (arguments[2].type != ArgumentType::OperandLiteral && arguments[2].type != ArgumentType::OperandSymbol))
@@ -84,12 +86,12 @@ static void exceptionInstructionsALU(const std::vector<Argument>& arguments)
 
   if(arguments.size() > 2) 
   {
-    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "ALU instructions except two arguments", 
+    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "ALU instructions expects two arguments", 
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   }
   if(arguments.size() == 0) 
   {
-    throw AssemblerErrors(ErrorType::ErrorTooFewArguments, "ALU instructions except two argument",
+    throw AssemblerErrors(ErrorType::ErrorTooFewArguments, "ALU instructions expects two argument",
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   }
   
@@ -105,18 +107,18 @@ static void exceptionInstructions_Not_Push_Pop(const std::vector<Argument>& argu
 
   if(arguments.size() > 1) 
   {
-    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Instructions [.not/push/pop] except only one argument", 
+    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Instructions [.not/push/pop] expects only one argument", 
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   }
   if(arguments.size() == 0) 
   {
-    throw AssemblerErrors(ErrorType::ErrorTooFewArguments, "Instructions [.not/push/pop] except only one argument",
+    throw AssemblerErrors(ErrorType::ErrorTooFewArguments, "Instructions [.not/push/pop] expects only one argument",
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   }
   
   if(arguments[0].type != ArgumentType::Register)
   {
-        throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instructions [.not/push/pop] except only one argument as operand",
+        throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instructions [.not/push/pop] expects only one argument as operand",
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   }
 }
@@ -125,13 +127,13 @@ static void exceptionSpecialRegisters(const std::vector<Argument>& arguments, bo
 {
   if(arguments.size() > 2) 
   {
-    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Instructions [.csrrd/csrwr] except two arguments", 
+    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Instructions [.csrrd/csrwr] expects two arguments", 
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   }
 
   if(arguments.size() == 0) 
   {
-    throw AssemblerErrors(ErrorType::ErrorTooFewArguments, "Instructions [.csrrd/csrwr] except two arguments",
+    throw AssemblerErrors(ErrorType::ErrorTooFewArguments, "Instructions [.csrrd/csrwr] expects two arguments",
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   }
 
@@ -160,6 +162,125 @@ static void exceptionSpecialRegisters(const std::vector<Argument>& arguments, bo
   }
 
 }
+
+static void exceptionInstructionLoad(const std::vector<Argument>& arguments)
+{
+  int signedOperand;
+
+  if(arguments.size() > 2) 
+  {
+    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Instruction [.ld] expects two arguments", 
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+  }
+
+  if(arguments.size() == 0) 
+  {
+    throw AssemblerErrors(ErrorType::ErrorTooFewArguments, "Instruction [.ld] expects two arguments",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+  }
+
+  if(arguments[1].type != ArgumentType::Register)
+  {
+    throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects register as second argument",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+  
+  }
+  if(arguments[0].type == ArgumentType::RegisterAndLiteral)
+  {
+    signedOperand = (int)resolveLiteral(arguments[0].variable);
+    if((signedOperand < - (1 << 11) || signedOperand > 1 << 11 - 1))
+    {
+      throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects (signed) literals that can be represented with 12 bits",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter()); 
+    }
+  }
+
+  if(arguments[0].type == ArgumentType::RegisterAndSymbol)
+  {
+    Symbol* tempSymbol = SymbolTable::findSymbol(arguments[0].variable);
+    if(tempSymbol->getDefined())
+    {
+          throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects symbol which value is known in assembly time",
+    Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter()); 
+ 
+    }
+    Macro* tempMacro = MacroTable::findMacro(arguments[0].variable);
+    {
+      if(tempMacro->getDefined())
+      {
+        if((tempMacro->getValue() < - (1 << 11) || tempMacro->getValue() > 1 << 11 - 1) && arguments[0].type == ArgumentType::RegisterAndSymbol)
+        {
+              throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects symbol which value can be represented with 12 bits",
+            Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter()); 
+  
+        }
+      }
+    }
+  }
+  
+} 
+
+static void exceptionInstructionStore(const std::vector<Argument>& arguments)
+{
+  int signedOperand; 
+  if(arguments.size() > 2) 
+  {
+    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Instruction [.st] expects two arguments", 
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+  }
+
+  if(arguments.size() == 0) 
+  {
+    throw AssemblerErrors(ErrorType::ErrorTooFewArguments, "Instruction [.st] expects two arguments",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+  } 
+
+  if(arguments[0].type != ArgumentType::Register)
+  {
+    throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.st] expects register as first argument",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+
+  }
+  if(arguments[1].addressing != AddressingType::Immediate)
+  {
+        throw AssemblerErrors(ErrorType::ErrorInvalidAddressing, "Instruction [.st] can't have immediate addressing",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+  }
+
+  if(arguments[1].type == ArgumentType::RegisterAndLiteral)
+  {
+    signedOperand = (int)resolveLiteral(arguments[1].variable);
+    if((signedOperand < - (1 << 11) || signedOperand > 1 << 11 - 1))
+    {
+      throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.st] expects (signed) literals that can be represented with 12 bits",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter()); 
+    }
+  }
+
+  if(arguments[1].type == ArgumentType::RegisterAndSymbol)
+  {
+    Symbol* tempSymbol = SymbolTable::findSymbol(arguments[1].variable);
+    if(tempSymbol->getDefined())
+    {
+          throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.st] expects symbol which value is known in assembly time",
+    Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter()); 
+
+    }
+    Macro* tempMacro = MacroTable::findMacro(arguments[1].variable);
+    {
+      if(tempMacro->getDefined())
+      {
+        if((tempMacro->getValue() < - (1 << 11) || tempMacro->getValue() > 1 << 11 - 1))
+        {
+              throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.st] expects symbol which value can be represented with 12 bits",
+            Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter()); 
+
+        }
+      }
+    }
+  }
+}
+
 std::vector<uint8_t> instructionHalt(const std::vector<Argument> &arguments)
 {
   if(arguments.size() > 0)
@@ -188,18 +309,18 @@ static std::vector<uint8_t> instructionJumpOrCall(const std::vector<Argument> &a
   Argument arg = arguments[0];
   if(arguments.size() > 1) 
   {
-    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Instructions [.jmp/call] except only one argument", 
+    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Instructions [.jmp/call] expects only one argument", 
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   }
   if(arguments.size() == 0) 
   {
-    throw AssemblerErrors(ErrorType::ErrorTooFewArguments, "Instructions [.jmp/call] except only one argument",
+    throw AssemblerErrors(ErrorType::ErrorTooFewArguments, "Instructions [.jmp/call] expects only one argument",
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   }
 
   if(arg.type != ArgumentType::OperandLiteral && arg.type != ArgumentType::OperandSymbol)
   {
-        throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instructions [.jmp/call] except only literal or symbol",
+        throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instructions [.jmp/call] expects only literal or symbol",
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
  
   }
@@ -370,7 +491,6 @@ std::vector<uint8_t> instructionDiv(const std::vector<Argument> &arguments)
 }
 
 
-
 static std::vector<uint8_t> instructionLogicalOperation(const std::vector<Argument> &arguments, const LogicalOpetaionType& typeOfOperation)
 {
   if(typeOfOperation != LogicalOpetaionType::Not)
@@ -433,7 +553,6 @@ std::vector<uint8_t> instructionXor(const std::vector<Argument> &arguments)
 {
   return instructionLogicalOperation(arguments, LogicalOpetaionType::Xor);
 }
-
 
 
 static std::vector<uint8_t> instructionShiftOperation(const std::vector<Argument> &arguments, const ShiftOperationType& typeOfOperation)
@@ -534,6 +653,7 @@ std::vector<uint8_t> instructionStore(const std::vector<Argument> &arguments)
   std::vector<uint8_t> instr;
   uint32_t operand;
   int signedOperand;
+  exceptionInstructionStore(arguments);
   if(arguments[1].addressing == AddressingType::RegisterDirect)
   {
     instr.push_back(0x91);
@@ -592,7 +712,7 @@ std::vector<uint8_t> instructionLoad(const std::vector<Argument> &arguments)
   std::vector<uint8_t> instr;
   uint32_t operand;
   int signedOperand;
-
+  exceptionInstructionLoad(arguments);
   uint8_t secondField = (arguments[1].registerNum << 4); 
   if(arguments[0].addressing == AddressingType::RegisterDirect || arguments[0].addressing == AddressingType::Immediate)
   {
@@ -622,7 +742,7 @@ std::vector<uint8_t> instructionLoad(const std::vector<Argument> &arguments)
     if(arguments[0].type == ArgumentType::OperandLiteral || arguments[0].type == ArgumentType::RegisterAndLiteral)
     {
 
-      signedOperand = (int)resolveLiteral(arguments[1].variable);
+      signedOperand = (int)resolveLiteral(arguments[0].variable);
       instr.push_back((uint32_t)signedOperand >> 8 & 0x0F);
       instr.push_back((uint32_t)signedOperand & 0xFF);
     }

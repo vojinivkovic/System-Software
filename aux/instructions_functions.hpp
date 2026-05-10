@@ -31,19 +31,13 @@ struct Argument
 };
 
 
-
 std::vector<uint8_t> instructionHalt(const std::vector<Argument>& arguments);
 
 std::vector<uint8_t> instructrionSoftwareInterrupt(const std::vector<Argument>& arguments);
 
-//static std::vector<uint8_t> instructionJumpOrCall(const std::vector<Argument>& arguments, const UnconditionalJumpType& typeOfJump);
-
 std::vector<uint8_t> instructionJump(const std::vector<Argument>& arguments);
 
 std::vector<uint8_t> instructionCall(const std::vector<Argument>& arguments);
-
-
-//static std::vector<uint8_t> instructionConditionalJump(const std::vector<Argument>& arguments, const ConditionalJumpType& typeOfJump);
 
 std::vector<uint8_t> instuctionJumpEqual(const std::vector<Argument>& arguments);
 
