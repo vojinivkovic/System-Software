@@ -63,10 +63,16 @@ public:
 
   void setScope(Scope scope_) { scope = scope_; }
   Scope getScope() const { return scope; }
-  Type getType() const { return type; }
 
+  Type getType() const { return type; }
+  void setType(Type type_) { type = type_; } 
   bool getDefined() const { return defined; }
+  void setDefined() { defined = true; }
+
   size_t getValue() const { return value; }
+  void setValue(size_t value_) { value = value_; }
+
+  void setSection(size_t idxSection) { section = idxSection; }
   size_t getIdx() const { return idx; }
 
   std::vector<ForwardReference*> getForwardReference() const { return tableForwardReference; }

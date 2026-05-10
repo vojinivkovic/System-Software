@@ -17,6 +17,7 @@ public:
   static void setCurrentSection(Section* newSection) { currentSection = newSection; }
   static size_t getNumberOfSections() { return arrayOfSections.size(); }
   static Section* findSection(size_t nameOfSection);
+  static void postTranslationExecution();
 
 private:
   static Section* currentSection;

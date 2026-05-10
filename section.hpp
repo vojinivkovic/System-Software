@@ -19,6 +19,7 @@ public:
   size_t getIdxOfSection() const { return idxSection; }
   int translateInstruction(const std::string& instruction, const std::vector<Argument>& arguments); 
   int executeDirective(const std::string& command, const std::vector<MacroParameter>& parameters);
+  void defineSymbol(const std::string& symbolName);
   int copyContent();
   static StringTable* getStringTable() { return tableOfSectionString; }
   static std::string::size_type findSectionInStringTable(const std::string& sectionName) { return tableOfSectionString->findString(sectionName); }

@@ -19,14 +19,17 @@ class Macro
     bool getDefined() const { return defined; }
     int getValue() const {return value; }
     void addForwardReference(ForwardReference* newReference) { tableForwardReference.push_back(newReference); }
-  private:
+    bool checkForResolving(std::vector<std::string> definedSymbols);
+    void resolveMacro();
+    
+    private:
     bool defined;
     size_t name;
     int value;
     std::vector<std::string> dependencySymbol;
     std::vector<Token> expression;
     std::vector<ForwardReference*> tableForwardReference;
-    void resolveMacro();
+    
 };
 
 #endif

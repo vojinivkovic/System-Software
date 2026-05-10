@@ -2,6 +2,8 @@
 #include "macro_table.hpp"
 #include "../symbol/symbol_table.hpp"
 #include "../aux/expression_resolver.hpp"
+#include "../aux/exceptions.hpp"
+#include "../assembler.hpp"
 #include <iostream>
 
 
@@ -25,8 +27,9 @@ Macro::Macro(const size_t& name_, const std::vector<Token>& expression_,
       tempSymbol = SymbolTable::findSymbol(*it);
       if(tempSymbol && tempSymbol->getDefined())
       {
-        std::cout << "In .EQU directive symbols are not acceptable" << std::endl;
-        return;
+        throw AssemblerErrors(ErrorType::ErrorSymbolAlreadyDefined, "Symbols is already defined",
+        Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+ 
       }
     }
     it++;
@@ -38,12 +41,30 @@ Macro::Macro(const size_t& name_, const std::vector<Token>& expression_,
   }
   else
   {
-    defined = true;
     this->resolveMacro();
+    MacroTable::tryToResolveAllMacros(std::vector<std::string>{MacroTable::getNameOfMacro(name)});
   }
+}
+
+bool Macro::checkForResolving(std::vector<std::string> definedSymbols)
+{
+  for(auto itDefinedSymbols : definedSymbols)
+  {
+    for(auto itDependencySymbols = dependencySymbol.begin(); itDependencySymbols != dependencySymbol.end(); itDependencySymbols++)
+    {
+      if(itDefinedSymbols == (*itDependencySymbols))
+      {
+        dependencySymbol.erase(itDependencySymbols);
+        break;
+      }
+    }
+  }
+  return dependencySymbol.empty();
+
 }
 
 void Macro::resolveMacro()
 {
+  defined = true;
   value = ExpressionResolver::evaluteExpression(expression);
 }

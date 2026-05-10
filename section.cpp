@@ -3,6 +3,8 @@
 #include "symbol/symbol_table.hpp"
 #include "aux/instructions.hpp"
 #include "aux/auxiliary_func.hpp"
+#include "macro/macro_table.hpp"
+#include "aux/exceptions.hpp"
 
 StringTable* Section::tableOfSectionString = new StringTable(StringTable::STType::SectionName);
 
@@ -46,6 +48,39 @@ int Section::executeDirective(const std::string &command, const std::vector<Macr
   Directives::execute(command, parameters);
 
   return 0;
+}
+
+void Section::defineSymbol(const std::string &symbolName)
+{
+  Symbol* tempSymol = SymbolTable::findSymbol(symbolName);
+  Macro* tempMacro = MacroTable::findMacro(symbolName);
+
+  if(tempMacro)
+  {
+    throw AssemblerErrors(ErrorType::ErrorSymbolAlreadyDefined, "There is already macro with same name",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+ 
+  }
+  if(tempSymol)
+  {
+    if(tempSymol->getDefined())
+    {
+      throw AssemblerErrors(ErrorType::ErrorSymbolAlreadyDefined, "Symbol is already defined",
+        Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+ 
+    }
+    tempSymol->setValue(locationCounter);
+    tempSymol->setSection(idxSection);
+    tempSymol->setType(Symbol::Type::Object);
+    tempSymol->setScope(Symbol::Scope::Local);
+    tempSymol->setDefined();
+  }
+  else
+  {
+    Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, locationCounter, idxSection, Symbol::Binding::NoBinding, Symbol::Type::Object, Symbol::Scope::Local, true);
+    SymbolTable::addSymbol(symbolName, newSymbol);
+  }
+  MacroTable::tryToResolveAllMacros(std::vector<std::string>{symbolName});
 }
 
 void Section::callocMemory(size_t sizeOfAllocation)

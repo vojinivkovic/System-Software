@@ -22,7 +22,7 @@ public:
   std::string::size_type findString(const std::string& name);
   std::string getNames() const { return tableOfNames; }
   void removeName(const size_t& start, const size_t& end) { tableOfNames.erase(start, end-start); }
-
+  std::string getNameOfElement(const size_t& startIdx) const;
 private:
   STType type;
   std::string tableOfNames;
