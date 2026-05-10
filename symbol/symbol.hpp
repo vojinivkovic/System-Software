@@ -63,6 +63,7 @@ public:
 
   void setScope(Scope scope_) { scope = scope_; }
   Scope getScope() const { return scope; }
+  Type getType() const { return type; }
 
   bool getDefined() const { return defined; }
   size_t getValue() const { return value; }

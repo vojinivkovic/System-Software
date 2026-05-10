@@ -6,7 +6,9 @@
 enum class ErrorType 
 {
   ErrorTooManyArguments,
-  ErrorInavlidArgumentType 
+  ErrorInvalidArgumentType,
+  ErrorTooFewArguments,
+  ErrorInvalidArgument 
 };
 
 class AssemblerErrors : public std::runtime_error
