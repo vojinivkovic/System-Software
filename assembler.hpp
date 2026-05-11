@@ -17,11 +17,13 @@ public:
   static void setCurrentSection(Section* newSection) { currentSection = newSection; }
   static size_t getNumberOfSections() { return arrayOfSections.size(); }
   static Section* findSection(size_t nameOfSection);
-  static void postTranslationExecution();
+  static void afterFirstPass();
 
 private:
   static Section* currentSection;
   static std::vector<Section*> arrayOfSections;
+  static void checkIfSymbolsDefined();
+  static void checkIfMacrosDefined();
 
 };
 

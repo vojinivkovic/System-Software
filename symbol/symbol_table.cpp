@@ -48,3 +48,15 @@ void SymbolTable::removeSymbolFromTable(const Symbol *tempSymbol)
   tableOfSymbolString->removeName(startName, endName);
 
 }
+
+bool SymbolTable::checkDefinition()
+{
+  for(auto iSymbol : table)
+  {
+    if(!iSymbol->getDefined())
+    {
+      return false;
+    }
+  }
+  return true;
+}

@@ -17,6 +17,8 @@ public:
   static size_t getNewIdxInSymbolTable() { return table.size(); }
   static Symbol* findSymbol(const std::string& name);
   static void removeSymbolFromTable(const Symbol* tempSymbol);
+  static bool checkDefinition();
+  static void resolveForwardReference();
 
 private:
   static size_t currentSection;

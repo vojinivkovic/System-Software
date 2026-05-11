@@ -10,7 +10,10 @@ enum class ErrorType
   ErrorTooFewArguments,
   ErrorInvalidArgument,
   ErrorInvalidAddressing,
-  ErrorSymbolAlreadyDefined 
+  ErrorSymbolAlreadyDefined,
+  ErrorInvalidSymbolInMacroExpression,
+  ErrorUndefinedSymbol,
+  ErrorUndefinedMacro
 };
 
 class AssemblerErrors : public std::runtime_error

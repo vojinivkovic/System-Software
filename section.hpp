@@ -32,8 +32,9 @@ public:
 private:
   size_t name, locationCounter, idxSection;
   std::vector<uint8_t> content;
+  std::vector<std::string> textContent;
   static StringTable* tableOfSectionString;
-
+  void textRepresentationOfInstruction(const std::string& command, const std::vector<Argument>& arguments);
 };
 
 
