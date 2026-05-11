@@ -19,6 +19,7 @@ public:
   static void removeSymbolFromTable(const Symbol* tempSymbol);
   static bool checkDefinition();
   static void resolveForwardReference();
+  static std::vector<Symbol*> getSymbolTable() { return table; }
 
 private:
   static size_t currentSection;

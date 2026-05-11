@@ -72,3 +72,38 @@ bool MacroTable::checkDefinition()
   }
   return true;
 }
+
+
+static bool checkIfLoadStore(std::vector<uint8_t> content, size_t offset)
+{
+  uint8_t firstField = content[offset + 3];
+  if(((firstField >> 4) & 0x0F) == 0x8 || ((firstField >> 4) & 0x0F) == 0x9)
+  {
+    return true;
+  }
+  return false;
+}
+
+void MacroTable::resolveForwardReference()
+{
+  for(auto iMacro : table)
+  {
+    std::vector<ForwardReference*> tableOfForwardReference = iMacro->getForwardReference();
+    if(tableOfForwardReference.size() > 0) 
+    {
+      for(auto forwardReference : tableOfForwardReference) 
+      {
+        Section* tempSection = Assembler::getSections()[forwardReference->getSection()];
+        if(checkIfLoadStore(tempSection->getContent(), forwardReference->getOffset()) && (iMacro->getValue() < -(1 << 11) || iMacro->getValue() > 1 << 11 - 1))
+        {
+          throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instructions [.ld/st] expects (signed) literals that can be represented with 12 bits",
+    forwardReference->getSection(), forwardReference->getOffset()); 
+        }
+        else
+        {
+          tempSection->insertValueInContent((uint32_t)iMacro->getValue(), forwardReference->getOffset());
+        }
+      }
+    }
+  }
+}

@@ -28,7 +28,8 @@ public:
   void callocMemory(size_t sizeOfAllocation);
   void insertString(const std::string& stringToInsert);
   void insertContent(const uint32_t& value);
-
+  void insertValueInContent(const uint32_t& value, size_t offset);
+  static StringTable* getTableOfSectionStrings() { return tableOfSectionString; }
 private:
   size_t name, locationCounter, idxSection;
   std::vector<uint8_t> content;

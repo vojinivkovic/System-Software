@@ -18,12 +18,14 @@ public:
   static size_t getNumberOfSections() { return arrayOfSections.size(); }
   static Section* findSection(size_t nameOfSection);
   static void afterFirstPass();
+  static std::vector<Section*> getSections() { return arrayOfSections; }
 
 private:
   static Section* currentSection;
   static std::vector<Section*> arrayOfSections;
   static void checkIfSymbolsDefined();
   static void checkIfMacrosDefined();
+  static void fixRelocationEntries();
 
 };
 

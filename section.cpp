@@ -116,6 +116,12 @@ void Section::insertContent(const uint32_t &value)
   content.push_back((value >> 24) & 0xFF);
 }
 
+void Section::insertValueInContent(const uint32_t &value, size_t offset)
+{
+  content[offset+1] |= 0X0F & (value >> 8);
+  content[offset] = value & 0xFF; 
+}
+
 void Section::textRepresentationOfInstruction(const std::string& command, const std::vector<Argument>& arguments)
 {
   std::string instr;

@@ -65,7 +65,7 @@ bool Instructions::resolveSymbol(const std::string &symbol, uint32_t* value)
       Section* currentSection = Assembler::getCurrentSection();
       RelocationEntry* newReloc = new RelocationEntry(currentSection->getLocationCounter(),
                                                       currentSection->getIdxOfSection(), tempSymbol->getIdx(), 0);
-      
+      RelocationTable::addRelocationEntry(newReloc);
       return true;
     }
     else

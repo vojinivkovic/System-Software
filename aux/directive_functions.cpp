@@ -11,7 +11,7 @@
 void directiveSection(const std::vector<MacroParameter>& parameters)
 {
 
-  exceptionDirectiveSkip(parameters);
+  exceptionDirectiveSection(parameters);
   Symbol* tempSymbol = SymbolTable::findSymbol(parameters[0].stringValue);
   Macro* tempMacro = MacroTable::findMacro(parameters[0].stringValue);
   if(tempSymbol->getType() != Symbol::Type::Section || tempMacro)

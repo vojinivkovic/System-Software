@@ -73,6 +73,7 @@ public:
   void setValue(size_t value_) { value = value_; }
 
   void setSection(size_t idxSection) { section = idxSection; }
+  size_t getSection() const { return section; }
   size_t getIdx() const { return idx; }
 
   std::vector<ForwardReference*> getForwardReference() const { return tableForwardReference; }

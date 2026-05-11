@@ -1,4 +1,8 @@
 #include "symbol_table.hpp"
+#include "../assembler.hpp"
+#include "../aux/exceptions.hpp"
+#include "../relocation/relocation_entry.hpp"
+#include "../relocation/relocation_table.hpp"
 
 StringTable* SymbolTable::tableOfSymbolString = new StringTable(StringTable::STType::SymbolName);
 std::vector<Symbol*> SymbolTable::table;
@@ -53,10 +57,44 @@ bool SymbolTable::checkDefinition()
 {
   for(auto iSymbol : table)
   {
-    if(!iSymbol->getDefined())
+    if(!iSymbol->getDefined() && iSymbol->getBinding() != Symbol::Binding::Import)
     {
       return false;
     }
   }
   return true;
+}
+static bool checkIfLoadStore(std::vector<uint8_t> content, size_t offset)
+{
+  uint8_t firstField = content[offset + 3];
+  if(((firstField >> 4) & 0x0F) == 0x8 || ((firstField >> 4) & 0x0F) == 0x9)
+  {
+    return true;
+  }
+  return false;
+}
+void SymbolTable::resolveForwardReference()
+{
+  for(auto iSymbol : table)
+  {
+    std::vector<ForwardReference*> tableOfForwardReference = iSymbol->getForwardReference();
+    if(tableOfForwardReference.size() > 0) 
+    {
+      for(auto forwardReference : tableOfForwardReference) 
+      {
+        Section* tempSection = Assembler::getSections()[forwardReference->getSection()];
+        if(checkIfLoadStore(tempSection->getContent(), forwardReference->getOffset()))
+        {
+          throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instructions [.ld/st] expects symbol which value is known in assembly time",
+    forwardReference->getSection(), forwardReference->getOffset()); 
+        }
+        else
+        {
+          RelocationEntry* newReloc = new RelocationEntry(forwardReference->getOffset(),
+                                                      forwardReference->getSection(), iSymbol->getIdx(), 0);
+          RelocationTable::addRelocationEntry(newReloc);
+        }
+      }
+    }
+  }
 }
