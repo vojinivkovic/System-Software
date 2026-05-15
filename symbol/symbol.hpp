@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include <cstdint>
 #include "../aux/forward_reference.hpp"
 
 
@@ -57,7 +58,7 @@ public:
 
 }
   size_t getName() const { return name; }
-  
+  size_t getSize() const { return size; }
   void setBinding(Binding bind_) { bind = bind_; }
   Binding getBinding() const { return bind; } 
 
@@ -79,6 +80,9 @@ public:
   std::vector<ForwardReference*> getForwardReference() const { return tableForwardReference; }
 
   void addForwardReference(ForwardReference* newReference) { tableForwardReference.push_back(newReference); }
+
+  std::vector<uint8_t> getLittleEndianFormatOfSymbol() const;
+
 private: 
   size_t idx, name, size, value, section;
   Binding bind;

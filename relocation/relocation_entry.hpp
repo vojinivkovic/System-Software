@@ -1,6 +1,8 @@
 #ifndef _RELOCATION_ENTRY_HPP_
 #define _RELOCATION_ENTRY_HPP_
 #include <cstdlib>
+#include <cstdint>
+#include <vector>
 
 enum class RelocationType
 {
@@ -15,6 +17,10 @@ public:
   size_t getIdxSymbol() const { return idxSymbol;}
   void setIdxSymbol(size_t idx) { idxSymbol = idx; }
   void setAddend(size_t newAddend) { addend = newAddend; } 
+  size_t getOffset() const { return offset;}
+  size_t getIdxSection() const { return idxSection; }
+  size_t getAddend() const { return addend; }
+  std::vector<uint8_t> getLittleEndianFormatOfRE() const;
 
 private:
   size_t offset, idxSection, idxSymbol, addend;

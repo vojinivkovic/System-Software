@@ -9,7 +9,7 @@ std::vector<Section*> Assembler::arrayOfSections;
 
 void Assembler::initializeAssembler()
 {
-  Section* newSection = new Section("UND");
+  Section* newSection = new Section(".UND", Section::SectionType::NullSection);
   Assembler::addSection(newSection);
   Assembler::setCurrentSection(newSection);
 }
@@ -32,9 +32,14 @@ void Assembler::afterFirstPass()
   checkIfMacrosDefined();
   SymbolTable::resolveForwardReference();
   MacroTable::resolveForwardReference();
+  fixRelocationEntries();
 
 }
 
+void Assembler::makeHeaderSection()
+{
+  Section::makeSectionOfSectionNames();
+}
 
 void Assembler::checkIfSymbolsDefined()
 {

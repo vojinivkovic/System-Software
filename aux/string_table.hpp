@@ -3,7 +3,7 @@
 
 
 #include <string>
-
+#include "../section.hpp"
 
 class StringTable
 {
@@ -23,6 +23,7 @@ public:
   std::string getNames() const { return tableOfNames; }
   void removeName(const size_t& start, const size_t& end) { tableOfNames.erase(start, end-start); }
   std::string getNameOfElement(const size_t& startIdx) const;
+  void makeSection(const std::string& name, Section::SectionType type);
 private:
   STType type;
   std::string tableOfNames;

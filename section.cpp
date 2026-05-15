@@ -8,7 +8,7 @@
 
 StringTable* Section::tableOfSectionString = new StringTable(StringTable::STType::SectionName);
 
-Section::Section(const std::string& sectionName) : name(tableOfSectionString->getOffset()), locationCounter(0), idxSection(Assembler::getNumberOfSections())
+Section::Section(const std::string& sectionName, const SectionType& type_) : name(tableOfSectionString->getOffset()), locationCounter(0), idxSection(Assembler::getNumberOfSections()), type(type_)
 { 
   
   Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, 0, idxSection, Symbol::Binding::NoBinding, Symbol::Type::Section, Symbol::Scope::NoScope, true);
@@ -120,6 +120,11 @@ void Section::insertValueInContent(const uint32_t &value, size_t offset)
 {
   content[offset+1] |= 0X0F & (value >> 8);
   content[offset] = value & 0xFF; 
+}
+
+void Section::makeSectionOfSectionNames()
+{
+  tableOfSectionString->makeSection(".secstrtab", Section::SectionType::SectionStrTabSection);
 }
 
 void Section::textRepresentationOfInstruction(const std::string& command, const std::vector<Argument>& arguments)

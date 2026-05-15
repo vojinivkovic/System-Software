@@ -98,3 +98,34 @@ void SymbolTable::resolveForwardReference()
     }
   }
 }
+
+void SymbolTable::makeSection()
+{
+  Section* newSection = new Section(".symtable", Section::SectionType::SymTabSection);
+  std::vector<uint8_t> content;
+  std::vector<uint8_t> subContent;
+  std::string subContentString;
+  std::vector<std::string> textContent;
+
+  for(auto iSymbol : table)
+  {
+    subContent = iSymbol->getLittleEndianFormatOfSymbol();
+    content.insert(content.end(), subContent.begin(), subContent.end());
+    newSection->incrementLocationCounter(7 * sizeof(size_t));
+    subContentString = "Name: " + std::to_string(iSymbol->getName()) +
+      ", Size: " + std::to_string(iSymbol->getSize()) + 
+      ", Value: " + std::to_string(iSymbol->getValue()) + 
+      ", Section: " + std::to_string(iSymbol->getSection()) + 
+      ", Bind: " + std::to_string(static_cast<size_t>(iSymbol->getBinding())) + 
+      ", Type: " + std::to_string(static_cast<size_t>(iSymbol->getType())) + 
+      ", Scope: " + std::to_string(static_cast<size_t>(iSymbol->getScope()));
+    
+    textContent.push_back(subContentString);
+  }
+
+  newSection->setContent(content);
+  newSection->setTextContent(textContent);
+  Assembler::addSection(newSection);
+
+  tableOfSymbolString->makeSection(".symstrtab", Section::SectionType::SymStrTabSection);
+}

@@ -20,6 +20,7 @@ public:
   static bool checkDefinition();
   static void resolveForwardReference();
   static std::vector<Symbol*> getSymbolTable() { return table; }
+  static void makeSection();
 
 private:
   static size_t currentSection;

@@ -23,7 +23,7 @@ void directiveSection(const std::vector<MacroParameter>& parameters)
   std::string::size_type findName = Section::findSectionInStringTable(parameters[0].stringValue);
   if(findName == std::string::npos)
   {
-    Section* newSection = new Section(parameters[0].stringValue);
+    Section* newSection = new Section(parameters[0].stringValue, Section::SectionType::ProgbitsSection);
     Assembler::addSection(newSection);
     Assembler::setCurrentSection(newSection);
     return;

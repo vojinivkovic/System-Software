@@ -19,6 +19,7 @@ public:
   static Section* findSection(size_t nameOfSection);
   static void afterFirstPass();
   static std::vector<Section*> getSections() { return arrayOfSections; }
+  static void makeHeaderSection();
 
 private:
   static Section* currentSection;

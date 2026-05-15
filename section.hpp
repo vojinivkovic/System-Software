@@ -14,7 +14,17 @@
 class Section
 {
 public:
-  Section(const std::string& sectionName);
+  enum class SectionType 
+  {
+    NullSection, 
+    ProgbitsSection, 
+    SymTabSection,
+    HeaderSectionTabSection,
+    SymStrTabSection,
+    SectionStrTabSection, 
+    RelaSection
+  };
+  Section(const std::string& sectionName, const SectionType& type_);
   size_t getLocationCounter() const { return locationCounter;}
   size_t getIdxOfSection() const { return idxSection; }
   int translateInstruction(const std::string& instruction, const std::vector<Argument>& arguments); 
@@ -30,8 +40,14 @@ public:
   void insertContent(const uint32_t& value);
   void insertValueInContent(const uint32_t& value, size_t offset);
   static StringTable* getTableOfSectionStrings() { return tableOfSectionString; }
+  void setContent (const std::vector<uint8_t>& content_) { content = content_; }
+  void setTextContent (const std::vector<std::string>& textContent_) { textContent = textContent_; }
+  void incrementLocationCounter(size_t increment) { locationCounter += increment; }
+  static void makeSectionOfSectionNames();
+
 private:
   size_t name, locationCounter, idxSection;
+  SectionType type;
   std::vector<uint8_t> content;
   std::vector<std::string> textContent;
   static StringTable* tableOfSectionString;
