@@ -27,10 +27,11 @@ public:
   Section(const std::string& sectionName, const SectionType& type_);
   size_t getLocationCounter() const { return locationCounter;}
   size_t getIdxOfSection() const { return idxSection; }
+  void setOffsetInFile(const size_t& offset) { offsetInFile = offset; }
   int translateInstruction(const std::string& instruction, const std::vector<Argument>& arguments); 
   int executeDirective(const std::string& command, const std::vector<MacroParameter>& parameters);
   void defineSymbol(const std::string& symbolName);
-  int copyContent();
+  
   static StringTable* getStringTable() { return tableOfSectionString; }
   static std::string::size_type findSectionInStringTable(const std::string& sectionName) { return tableOfSectionString->findString(sectionName); }
   size_t getSectionName() const { return name; }
@@ -40,13 +41,17 @@ public:
   void insertContent(const uint32_t& value);
   void insertValueInContent(const uint32_t& value, size_t offset);
   static StringTable* getTableOfSectionStrings() { return tableOfSectionString; }
+  std::vector<uint8_t> getContent() const { return content; }
+  std::vector<std::string> getTextContent() const { return textContent; }
   void setContent (const std::vector<uint8_t>& content_) { content = content_; }
   void setTextContent (const std::vector<std::string>& textContent_) { textContent = textContent_; }
   void incrementLocationCounter(size_t increment) { locationCounter += increment; }
   static void makeSectionOfSectionNames();
+  std::vector<uint8_t> getLittleEndiandOfSection();
+  std::string getTextFormatOfSection();
 
 private:
-  size_t name, locationCounter, idxSection;
+  size_t name, locationCounter, idxSection, offsetInFile;
   SectionType type;
   std::vector<uint8_t> content;
   std::vector<std::string> textContent;

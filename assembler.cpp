@@ -3,6 +3,7 @@
 #include "macro/macro_table.hpp"
 #include "aux/exceptions.hpp"
 #include "relocation/relocation_table.hpp"
+#include "elf_header.hpp"
 
 Section* Assembler::currentSection = nullptr;
 std::vector<Section*> Assembler::arrayOfSections;
@@ -33,13 +34,43 @@ void Assembler::afterFirstPass()
   SymbolTable::resolveForwardReference();
   MacroTable::resolveForwardReference();
   fixRelocationEntries();
-
-}
-
-void Assembler::makeHeaderSection()
-{
+  RelocationTable::makeSection();
+  SymbolTable::makeSection();
   Section::makeSectionOfSectionNames();
 }
+
+void Assembler::makeELFFiles(const std::string &names)
+{
+  size_t sizeOfFile = 0;
+  std::vector<uint8_t> binaryContent;
+  std::vector<std::string> textContent;
+
+  
+
+  for(auto iSection : arrayOfSections)
+  {
+    iSection->setOffsetInFile(sizeOfFile);
+    binaryContent.insert(binaryContent.end(), iSection->getContent().begin(), iSection->getContent().end());
+    textContent.insert(textContent.end(), iSection->getTextContent().begin(), iSection->getTextContent().end());
+    sizeOfFile += iSection->getLocationCounter();
+  }
+
+  ELFHeader::makeELFHeader(ELFHeader::ELFHeaderType::ELF_REL, 0, 0, sizeOfFile, 0, 0, 
+  6 * sizeof(size_t), arrayOfSections.size(), arrayOfSections.size() - 1);
+
+
+  for(auto iSection : arrayOfSections) 
+  {
+    binaryContent.insert(binaryContent.end(), iSection->getLittleEndiandOfSection().begin(), iSection->getLittleEndiandOfSection().end());
+    textContent.push_back(iSection->getTextFormatOfSection());
+  }
+  binaryContent.insert(binaryContent.begin(), ELFHeader::getLittleEndianFormat().begin(), ELFHeader::getLittleEndianFormat().end());
+  textContent.insert(textContent.begin(), ELFHeader::getStringFormat());
+
+  // make files with content
+}
+
+
 
 void Assembler::checkIfSymbolsDefined()
 {

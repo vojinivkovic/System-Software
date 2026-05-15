@@ -127,6 +127,80 @@ void Section::makeSectionOfSectionNames()
   tableOfSectionString->makeSection(".secstrtab", Section::SectionType::SectionStrTabSection);
 }
 
+static std::vector<uint8_t> convertToLittleEndiand(size_t classMember)
+{
+  std::vector<uint8_t> littleEndianFormat;
+  for(size_t i = 0; i < sizeof(size_t); i++)
+  {
+    littleEndianFormat.push_back(static_cast<uint8_t>((classMember >> (i * 8)) & 0xFF));
+  }
+  return littleEndianFormat;
+}
+
+std::vector<uint8_t> Section::getLittleEndiandOfSection()
+{
+  std::vector<uint8_t> sectionHeader;
+  std::vector<uint8_t> container;
+
+  container = convertToLittleEndiand(name);
+  sectionHeader.insert(sectionHeader.end(), container.begin(), container.end());
+
+  container = convertToLittleEndiand(static_cast<size_t>(type));
+  sectionHeader.insert(sectionHeader.end(), container.begin(), container.end());
+
+  container = convertToLittleEndiand(0);
+  sectionHeader.insert(sectionHeader.end(), container.begin(), container.end());
+
+  container = convertToLittleEndiand(offsetInFile);
+  sectionHeader.insert(sectionHeader.end(), container.begin(), container.end());
+
+  container = convertToLittleEndiand(locationCounter);
+  sectionHeader.insert(sectionHeader.end(), container.begin(), container.end());
+
+  if(type == SectionType::RelaSection)
+  {
+    container = convertToLittleEndiand(4 * sizeof(size_t));
+  }
+  else if (type == SectionType::SymTabSection)
+  {
+    container = convertToLittleEndiand(7 * sizeof(size_t));
+  }
+  else 
+  {
+    container = convertToLittleEndiand(0);
+  }
+  sectionHeader.insert(sectionHeader.end(), container.begin(), container.end());
+
+  return sectionHeader;
+
+}
+
+std::string Section::getTextFormatOfSection()
+{
+  std::string stringFormat;
+  stringFormat = "Name: " + std::to_string(name) + 
+    ", Type: " + std::to_string(static_cast<size_t>(type)) + 
+    ", Virtual Address: " + std::to_string(0) + 
+    ", Offset in ELF file: " + std::to_string(offsetInFile) + 
+    ", Size of Section: " + std::to_string(locationCounter) + 
+    ", Size of Entry: ";
+  if(type == SectionType::RelaSection)
+  {
+    stringFormat += std::to_string(4 * sizeof(size_t));
+  }
+  else if (type == SectionType::SymTabSection)
+  {
+    stringFormat += std::to_string(7 * sizeof(size_t));
+  }
+  else 
+  {
+    stringFormat += std::to_string(0);
+  }
+
+  return stringFormat;
+
+}
+
 void Section::textRepresentationOfInstruction(const std::string& command, const std::vector<Argument>& arguments)
 {
   std::string instr;
