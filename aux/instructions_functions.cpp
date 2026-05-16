@@ -40,21 +40,38 @@ enum class ShiftOperationType
   Right
 };
 
-static uint32_t resolveLiteral(const std::string& literal)
+static int resolveLiteral(const std::string& literal)
 {
-  uint32_t operand;
-  switch (literal[1])
+  int operand;
+  size_t pos = 0;
+  if(literal[pos] == '-' || literal[0] == '+')
+  {
+    pos++;
+  }
+
+  switch (literal[pos + 1])
   {
     case 'x': 
     case 'X':
-      operand = stoul(literal, nullptr, 16);
+      operand = stoi(literal, nullptr, 16);
       break;
     case 'b':
     case 'B':
-      operand = stoul(literal.substr(2), nullptr, 2);
+      if(literal[0] == '-')
+      {
+        operand = - stoi(literal.substr(3), nullptr, 2);
+      }
+      else if (literal[0] == '+')
+      {
+        operand = stoi(literal.substr(3), nullptr, 2);
+      }
+      else
+      {
+        operand = stoi(literal.substr(2), nullptr, 2);
+      }
       break;
     default:
-      operand = stoul(literal);
+      operand = stoi(literal, nullptr, 10);
       break;
     }
     return operand;
@@ -187,7 +204,7 @@ static void exceptionInstructionLoad(const std::vector<Argument>& arguments)
   }
   if(arguments[0].type == ArgumentType::RegisterAndLiteral)
   {
-    signedOperand = (int)resolveLiteral(arguments[0].variable);
+    signedOperand = resolveLiteral(arguments[0].variable);
     if((signedOperand < - (1 << 11) || signedOperand > 1 << 11 - 1))
     {
       throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects (signed) literals that can be represented with 12 bits",
@@ -249,7 +266,7 @@ static void exceptionInstructionStore(const std::vector<Argument>& arguments)
 
   if(arguments[1].type == ArgumentType::RegisterAndLiteral)
   {
-    signedOperand = (int)resolveLiteral(arguments[1].variable);
+    signedOperand = resolveLiteral(arguments[1].variable);
     if((signedOperand < - (1 << 11) || signedOperand > 1 << 11 - 1))
     {
       throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.st] expects (signed) literals that can be represented with 12 bits",
@@ -306,6 +323,7 @@ static std::vector<uint8_t> instructionJumpOrCall(const std::vector<Argument> &a
 {
   std::vector<uint8_t> instr;
   uint32_t operand;
+  int signedOperand;
   Argument arg = arguments[0];
   if(arguments.size() > 1) 
   {
@@ -336,7 +354,14 @@ static std::vector<uint8_t> instructionJumpOrCall(const std::vector<Argument> &a
 
   if(arg.type == ArgumentType::OperandLiteral)
   {
-    operand = resolveLiteral(arg.variable);
+    signedOperand = resolveLiteral(arg.variable);
+    if(signedOperand < 0) 
+    {
+      throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instructions [.jmp/call] can't have negative literal",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+ 
+    }
+    operand = (uint32_t)signedOperand;
     instr.push_back(operand >> 8 & 0xFF);
     instr.push_back(operand & 0xFF);
   }  
@@ -683,7 +708,7 @@ std::vector<uint8_t> instructionStore(const std::vector<Argument> &arguments)
   { 
     if(arguments[1].type == ArgumentType::RegisterAndLiteral)
     {
-      signedOperand = (int)resolveLiteral(arguments[1].variable);
+      signedOperand = resolveLiteral(arguments[1].variable);
       instr.push_back((arguments[0].registerNum << 4) | ((uint32_t)signedOperand >> 8 & 0x0F));
       instr.push_back((uint32_t)signedOperand & 0xFF);
       return instr;
@@ -742,7 +767,7 @@ std::vector<uint8_t> instructionLoad(const std::vector<Argument> &arguments)
     if(arguments[0].type == ArgumentType::OperandLiteral || arguments[0].type == ArgumentType::RegisterAndLiteral)
     {
 
-      signedOperand = (int)resolveLiteral(arguments[0].variable);
+      signedOperand = resolveLiteral(arguments[0].variable);
       instr.push_back((uint32_t)signedOperand >> 8 & 0x0F);
       instr.push_back((uint32_t)signedOperand & 0xFF);
     }

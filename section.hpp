@@ -41,7 +41,6 @@ public:
   void insertContent(const uint32_t& value);
   void insertValueInContent(const uint32_t& value, size_t offset);
   static StringTable* getTableOfSectionStrings() { return tableOfSectionString; }
-  std::vector<uint8_t> getContent() const { return content; }
   std::vector<std::string> getTextContent() const { return textContent; }
   void setContent (const std::vector<uint8_t>& content_) { content = content_; }
   void setTextContent (const std::vector<std::string>& textContent_) { textContent = textContent_; }

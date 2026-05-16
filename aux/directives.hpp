@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <string>
 #include <vector>
+#include "directive_functions.hpp"
 
 class Directives
 {

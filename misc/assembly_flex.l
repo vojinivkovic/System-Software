@@ -178,7 +178,7 @@ int yylex();
 
 
 "%r"(1[0-5]|[0-9])\b {
-          yylval.field = strdup(yytext + 1); 
+          yylval.field = strdup(yytext + 2); 
           return GP_REGISTER;
           }
 "%sp" {
