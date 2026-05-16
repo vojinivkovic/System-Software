@@ -19,7 +19,7 @@ public:
   static Section* findSection(size_t nameOfSection);
   static void afterFirstPass();
   static std::vector<Section*> getSections() { return arrayOfSections; }
-  static void makeELFFiles(const std::string& names);
+  static void makeELFFiles(const std::string& name);
 
 
 private:

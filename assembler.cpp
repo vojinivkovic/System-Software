@@ -4,6 +4,8 @@
 #include "aux/exceptions.hpp"
 #include "relocation/relocation_table.hpp"
 #include "elf_header.hpp"
+#include <fstream>
+#include <iomanip>
 
 Section* Assembler::currentSection = nullptr;
 std::vector<Section*> Assembler::arrayOfSections;
@@ -39,7 +41,7 @@ void Assembler::afterFirstPass()
   Section::makeSectionOfSectionNames();
 }
 
-void Assembler::makeELFFiles(const std::string &names)
+void Assembler::makeELFFiles(const std::string &name)
 {
   size_t sizeOfFile = 0;
   std::vector<uint8_t> binaryContent;
@@ -67,7 +69,23 @@ void Assembler::makeELFFiles(const std::string &names)
   binaryContent.insert(binaryContent.begin(), ELFHeader::getLittleEndianFormat().begin(), ELFHeader::getLittleEndianFormat().end());
   textContent.insert(textContent.begin(), ELFHeader::getStringFormat());
 
-  // make files with content
+  std::ofstream outBin(name);
+  outBin << std::hex << std::uppercase << std::setfill('0');
+
+  for(size_t i = 0; i < binaryContent.size(); i++)
+  {
+    outBin << std::setw(2)
+        << static_cast<int>(binaryContent[i])
+        << ' ';
+
+    if ((i + 1) % 4 == 0)
+        outBin << '\n';
+  }
+  std::ofstream outText(name.substr(0, name.size() - 2) + ".txt");
+  for(size_t i = 0; i < textContent.size(); i++)
+  {
+    outText << textContent[i] << '\n';
+  }
 }
 
 

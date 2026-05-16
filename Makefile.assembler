@@ -1,0 +1,38 @@
+CXX = g++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
+LDFLAGS =
+SRC_DIRS := .
+SRCS := $(shell find $(SRC_DIRS) -name '*.cpp' -print)
+OBJS := $(SRCS:.cpp=.o)
+DEPS := $(OBJS:.o=.d) lex.yy.d y.tab.d
+GEN_OBJS := lex.yy.o y.tab.o
+
+.PHONY: clean_assembler
+
+
+assembler: $(OBJS) $(GEN_OBJS)
+	$(CXX) $(CXXFLAGS) -o ${@} ${^} $(LDFLAGS)
+
+# Compile .cpp to .o and generate dependency .d
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -MMD -MP -c ${<} -o ${@}
+
+%.o: %.c
+	$(CXX) $(CXXFLAGS) -MMD -MP -c ${<} -o ${@}
+
+
+y.tab.c y.tab.h: misc/assembly_bison.y
+	yacc -d misc/assembly_bison.y
+
+lex.yy.c: misc/assembly_flex.l y.tab.h
+	lex misc/assembly_flex.l
+
+
+-include $(DEPS)
+
+clean_assembler:
+	rm -f $(OBJS) $(GEN_OBJS) $(DEPS) assembler lex.yy.c lex.yy.h y.tab.c y.tab.h
+
+
+
+
