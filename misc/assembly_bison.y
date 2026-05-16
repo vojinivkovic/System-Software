@@ -1,6 +1,8 @@
 %{
 #include "../assembler.hpp"
 #include "../aux/instructions_functions.hpp"
+#include "../aux/directive_functions.hpp"
+#include "../aux/expression_tokens.hpp"
 #include <string.h>
 #include <cstdint>
 #include <cstdlib>
@@ -42,8 +44,47 @@ static uint8_t parseSPRegister(const char* variable)
      }
 }
 
+static int resolveLiteral(const std::string& literal)
+{
+  int operand;
+  size_t pos = 0;
+  if(literal[pos] == '-' || literal[0] == '+')
+  {
+    pos++;
+  }
+
+  switch (literal[pos + 1])
+  {
+    case 'x': 
+    case 'X':
+      operand = stoi(literal, nullptr, 16);
+      break;
+    case 'b':
+    case 'B':
+      if(literal[0] == '-')
+      {
+        operand = - stoi(literal.substr(3), nullptr, 2);
+      }
+      else if (literal[0] == '+')
+      {
+        operand = stoi(literal.substr(3), nullptr, 2);
+      }
+      else
+      {
+        operand = stoi(literal.substr(2), nullptr, 2);
+      }
+      break;
+    default:
+      operand = stoi(literal, nullptr, 10);
+      break;
+    }
+    return operand;
+}
+
 std::vector<Argument> args;
+std::vector<MacroParameter> params;
 std::string instr;
+std::string directive;
 %}
 
 
@@ -51,52 +92,142 @@ std::string instr;
 
 %union {char* field;}
 %token<field> DIRECTIVE EQU COMMAND GP_REGISTER CS_REGISTER SYMBOL LABEL STRING LITERAL END
-%type<field> line assembly_directive assembly_command expression equ_directive
-%type<field> list_of_parameters operand signed_literal signed_symbol base term signed_term
+%type<field> line assembly_directive assembly_command  equ_directive
+%type<field> list_of_parameters signed_literal signed_symbol 
+%type<Argument> operand
+%type<std::vector<Token>> expression base term signed_term
 %left '+' '-'
 %right UMINUS UPLUS
 
 %%
 line : assembly_directive
      | assembly_command
-     | LABEL assembly_directive
-     | LABEL assembly_command
+     | LABEL {
+          Assembler::getCurrentSection()->defineSymbol($1);
+          free($1);              
+     }
+     assembly_directive
+     | LABEL {
+          Assembler::getCurrentSection()->defineSymbol($1);
+          free($1);              
+     }
+     assembly_command
      | END { YYACCEPT; }
      | error '\n'
      ;
 
-assembly_directive : DIRECTIVE
-                   | DIRECTIVE list_of_parameters
-                   | DIRECTIVE STRING
+assembly_directive : DIRECTIVE {
+                         directive = $1;
+                         Assembler::getCurrentSection()->executeDirective(directive, params);
+                         free($1);
+                    }
+                   | DIRECTIVE list_of_parameters {
+                         directive = $1;
+                         Assembler::getCurrentSection()->executeDirective(directive, params);
+                         params.clear();
+                         free($1);
+                    }
+                   | DIRECTIVE STRING {
+                         directive = $1;
+                         params.push_back(MacroParameter{MacroParameterType::String, $2, 0, {}});
+                         Assembler::getCurrentSection()->executeDirective(directive, params);
+                         params.clear();
+                         free($1);
+                         free($2);
+                    }
+
                    | equ_directive
                    ;
 
-equ_directive: EQU SYMBOL ',' expression;
+equ_directive: EQU SYMBOL ',' expression {
+                         directive = $1;
+                         params.push_back(MacroParameter{MacroParameterType::Symbol, $2, 0, {}});
+                         params.push_back(MacroParameter{MacroParameterType::Expression, "", 0, $3});
+                         Assembler::getCurrentSection()->executeDirective(directive, params);
+                         params.clear();
+                         free($1);
+                         free($2);
+                    }
 
-list_of_parameters : signed_symbol
-                   | signed_literal
-                   | list_of_parameters ',' signed_symbol
-                   | list_of_parameters ',' signed_literal
+list_of_parameters : SYMBOL {
+                         params.push_back(MacroParameter{MacroParameterType::Symbol, $1, 0, {}});
+                         free($1);
+                    }    
+                   | signed_literal {
+                         int value = resolveLiteral($1);
+                         free($1);
+                         params.push_back(MacroParameter{MacroParameterType::Literal, "", value, {}});
+                   }
+                   | list_of_parameters ',' SYMBOL {
+                         params.push_back(MacroParameter{MacroParameterType::Symbol, $3, 0, {}});
+                         free($3);
+                    } 
+                   | list_of_parameters ',' signed_literal {
+                         int value = resolveLiteral($3);
+                         free($3);
+                         params.push_back(MacroParameter{MacroParameterType::Literal, "", value, {}});
+                   }
                    ;
 
-expression : term
-           | expression '+' term
-           | expression '-' term
+expression : term {
+               $$ = std::move($1);
+          }
+           | expression '+' term {
+               $$ = std::move($1);
+               $$.push_back(Token{TokenType::BINPLUS, 0, ""});
+               $$.insert($$.end(), $3.begin(), $3.end());
+
+           }
+           | expression '-' term {
+               $$ = std::move($1);
+               $$.push_back(Token{TokenType::BINMINUS, 0, ""});
+               $$.insert($$.end(), $3.begin(), $3.end());
+           }
            ;
 
-term : SYMBOL
-     | LITERAL
-     | '(' expression ')'
-     | signed_term
+term : SYMBOL {
+          $$ = {Token{TokenType::SYMBOL, 0, $1}};
+          free($1);
+     }
+     | LITERAL {
+          int value = resolveLiteral($1);
+          $$ = {Token{TokenType::LITERAL, value, ""}};
+          free($1);
+     }
+     | '(' expression ')' {
+          $$ = {Token{TokenType::LPARENTHESES, 0,  ""}};
+          $$.insert($$.end(), $2.begin(), $2.end());
+          $$.push_back(Token{TokenType::RPARENTHESES, 0, ""});
+     }
+     | signed_term {
+          $$ = std::move($1);
+     }
      ;
 
-signed_term : '+' base
-            | '-' base
+signed_term : '+' base {
+               $$ = {Token{TokenType::UNPLUS, 0, ""}};
+               $$.insert($$.end(), $2.begin(), $2.end());
+               }
+            | '-' base {
+               $$ = {Token{TokenType::UNMINUS, 0, ""}};
+               $$.insert($$.end(), $2.begin(), $2.end());
+               }
             ;
 
-base : SYMBOL
-     | LITERAL
-     | '(' expression ')'
+base : SYMBOL {
+          $$ = {Token{TokenType::SYMBOL, 0, $1}};
+          free($1);
+     }
+     | LITERAL {
+          int value = resolveLiteral($1);
+          $$ = {Token{TokenType::LITERAL, value, ""}};
+          free($1);
+     }
+     | '(' expression ')' {
+          $$ = {Token{TokenType::LPARENTHESES, 0,  ""}};
+          $$.insert($$.end(), $2.begin(), $2.end());
+          $$.push_back(Token{TokenType::RPARENTHESES, 0, ""});
+     }
      ;
 
 signed_literal : LITERAL { 
@@ -121,16 +252,6 @@ signed_literal : LITERAL {
 
                ;
 
-signed_symbol : SYMBOL { $$ = $1;}
-              | '-' SYMBOL {
-                         size_t len = strlen($2);
-                         $$ = (char*)malloc((len + 2) * sizeof(char));
-                         $$[0] = '-';
-                         strcpy($$ + 1, $2);
-
-                         free($2);
-                    }
-              ;
 
 operand : LITERAL {
                     $$ = Argument{ArgumentType::OperandLiteral, 
