@@ -4,6 +4,7 @@
 #include "exceptions.hpp"
 #include "../symbol/symbol_table.hpp"
 #include "../macro/macro_table.hpp"
+#include <iostream>
 
 enum class UnconditionalJumpType 
 {
@@ -42,39 +43,48 @@ enum class ShiftOperationType
 
 static int resolveLiteral(const std::string& literal)
 {
-  int operand;
-  size_t pos = 0;
-  if(literal[pos] == '-' || literal[0] == '+')
-  {
-    pos++;
-  }
+     std::size_t pos = 0;
+    bool negative = false;
 
-  switch (literal[pos + 1])
-  {
-    case 'x': 
-    case 'X':
-      operand = stoi(literal, nullptr, 16);
-      break;
-    case 'b':
-    case 'B':
-      if(literal[0] == '-')
-      {
-        operand = - stoi(literal.substr(3), nullptr, 2);
-      }
-      else if (literal[0] == '+')
-      {
-        operand = stoi(literal.substr(3), nullptr, 2);
-      }
-      else
-      {
-        operand = stoi(literal.substr(2), nullptr, 2);
-      }
-      break;
-    default:
-      operand = stoi(literal, nullptr, 10);
-      break;
+    if (literal[pos] == '+' || literal[pos] == '-') {
+        negative = (literal[pos] == '-');
+        ++pos;
     }
-    return operand;
+
+    int base = 10;
+
+    if (pos + 1 < literal.size() &&
+        literal[pos] == '0' &&
+        (literal[pos + 1] == 'x' || literal[pos + 1] == 'X'))
+    {
+        base = 16;
+    }
+    else if (pos + 1 < literal.size() &&
+             literal[pos] == '0' &&
+             (literal[pos + 1] == 'b' || literal[pos + 1] == 'B'))
+    {
+        base = 2;
+    }
+
+    // Parse as unsigned 32-bit value.
+    uint32_t value;
+
+    if (base == 2) {
+        std::size_t digitsPos = pos + 2;
+        value = static_cast<uint32_t>(
+            std::stoul(literal.substr(digitsPos), nullptr, 2)
+        );
+    } else {
+        value = static_cast<uint32_t>(
+            std::stoul(literal.substr(pos), nullptr, base)
+        );
+    }
+
+    if (negative) {
+        return -static_cast<int32_t>(value);
+    }
+
+    return static_cast<int32_t>(value);
 }
 
 
@@ -310,7 +320,7 @@ std::vector<uint8_t> instructionHalt(const std::vector<Argument> &arguments)
 
 std::vector<uint8_t> instructrionSoftwareInterrupt(const std::vector<Argument> &arguments)
 {
-    if(arguments.size() > 0)
+  if(arguments.size() > 0)
   {
         throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Instruction [.int] doesn't have arguments", 
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
@@ -773,7 +783,7 @@ std::vector<uint8_t> instructionLoad(const std::vector<Argument> &arguments)
     }
     else
     {
-      if(Instructions::resolveSymbol(arguments[1].variable, &operand))
+      if(Instructions::resolveSymbol(arguments[0].variable, &operand))
       {
         instr.push_back(operand >> 8 & 0x0F);
         instr.push_back(operand & 0xFF);

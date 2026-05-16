@@ -4,12 +4,13 @@
 #include <cstring>
 #include <cstdio>
 #include <string>
+
 int yyparse();
 extern FILE* yyin;
 
 static int findOption(int argc, char* argv[])
 {
-  for(size_t i = 0; i < argc; i++)
+  for(int i = 0; i < argc; i++)
   {
     if(std::strcmp(argv[i], "-o") == 0)
     {
@@ -39,7 +40,7 @@ int main(int argc, char* argv[])
       throw std::runtime_error("Option -o of the assembler is not set. Assembler expects ./assembler -o out.o in.s");
     
     }
-    if(idxOfOption!= 1 || idxOfOption != 2)
+    if(idxOfOption!= 1 && idxOfOption != 2)
     {
       throw std::runtime_error("Option -o is not used properly. Assembler expects ./assembler -o out.o in.s");
     
@@ -61,13 +62,24 @@ int main(int argc, char* argv[])
     }
 
     Assembler::initializeAssembler();
+    //extern int yydebug;
+    //yydebug = 1;
     yyparse();
     fclose(yyin);
     Assembler::afterFirstPass();
     Assembler::makeELFFiles(outputName);
   }
-  catch(const AssemblerErrors& err)
+  catch(AssemblerErrors& err)
   {
+    std::cout << "Error[" << err.toString(err.getErrorType()) << "]" << std::endl
+              << "In section name[offset]: " << err.getSectionName() << "; Byte Number: " << err.getLineInSection() << std::endl
+              << err.what() << std::endl;
+            
+    if(!err.getDetailMessage().empty())
+    {
+      std::cout << "(" << err.getDetailMessage() << ")" << std::endl; 
+
+    }
     if(yyin)
     {
       fclose(yyin);

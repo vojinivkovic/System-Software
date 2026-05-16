@@ -4,6 +4,7 @@
 #include "../symbol/symbol_table.hpp"
 #include "forward_reference.hpp"
 #include "../assembler.hpp"
+#include <iostream>
 #include "../relocation/relocation_table.hpp"
 
 std::unordered_map<std::string, std::vector<uint8_t> (*)(const std::vector<Argument>& arguments)> Instructions::tableOfInstructions = {

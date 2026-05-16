@@ -22,16 +22,16 @@ assembler: $(OBJS) $(GEN_OBJS)
 
 
 y.tab.c y.tab.h: misc/assembly_bison.y
-	yacc -d misc/assembly_bison.y
+	bison -d -o y.tab.c $<
 
 lex.yy.c: misc/assembly_flex.l y.tab.h
-	lex misc/assembly_flex.l
+	flex $<
 
 
 -include $(DEPS)
 
 clean_assembler:
-	rm -f $(OBJS) $(GEN_OBJS) $(DEPS) assembler lex.yy.c lex.yy.h y.tab.c y.tab.h
+	rm -f $(OBJS) $(GEN_OBJS) $(DEPS) assembler lex.yy.c y.tab.c y.tab.h
 
 
 

@@ -1,4 +1,4 @@
-.PHONY assembler clean_assembler 
+.PHONY: assembler clean_assembler 
 
 assembler:
 	$(MAKE) --file=Makefile.assembler assembler

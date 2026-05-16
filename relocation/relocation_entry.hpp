@@ -13,7 +13,7 @@ class RelocationEntry
 {
 public:
   RelocationEntry(size_t offset_, size_t idxSection_, size_t idxSymbol_, size_t addend_, RelocationType type_ = RelocationType::Absolute) :
-  offset(offset_), idxSection(idxSection_), idxSymbol(idxSymbol_), addend(addend_) {}
+  offset(offset_), idxSection(idxSection_), idxSymbol(idxSymbol_), addend(addend_), typeOfRelocations(type_) {}
   size_t getIdxSymbol() const { return idxSymbol;}
   void setIdxSymbol(size_t idx) { idxSymbol = idx; }
   void setAddend(size_t newAddend) { addend = newAddend; } 

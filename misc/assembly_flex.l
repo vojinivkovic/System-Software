@@ -2,7 +2,7 @@
 #include "y.tab.h"
 #include <string.h>
 #include <stdlib.h>
-void yyerror(char* s);
+void yyerror(const char* s);
 int yylex();  
 %}
 %%
@@ -177,7 +177,7 @@ int yylex();
       }	
 
 
-"%r"(1[0-5]|[0-9])\b {
+"%r"(1[0-5]|[0-9]) {
           yylval.field = strdup(yytext + 2); 
           return GP_REGISTER;
           }
@@ -250,8 +250,9 @@ int yylex();
   return ']';
 }
 
-"#".* ;
 
+[ \t\r]+    ;
+"#"[^\n]*   ;    
 "\n" { return '\n'; }
 
 %%
@@ -259,9 +260,4 @@ int yylex();
 int yywrap()
 {
   return 1;
-}
-
-void yyerror(char* s)
-{
-
 }

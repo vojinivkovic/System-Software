@@ -5,12 +5,14 @@
 #include "aux/auxiliary_func.hpp"
 #include "macro/macro_table.hpp"
 #include "aux/exceptions.hpp"
+#include "aux/string_table.hpp"
+#include <iostream>
 
 StringTable* Section::tableOfSectionString = new StringTable(StringTable::STType::SectionName);
 
 Section::Section(const std::string& sectionName, const SectionType& type_) : name(tableOfSectionString->getOffset()), locationCounter(0), idxSection(Assembler::getNumberOfSections()), type(type_)
 { 
-  
+  std::cout << "Make new section" << std::endl;
   Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, 0, idxSection, Symbol::Binding::NoBinding, Symbol::Type::Section, Symbol::Scope::NoScope, true);
   SymbolTable::addSymbol(sectionName, newSymbol);
   tableOfSectionString->addString(sectionName);
@@ -19,6 +21,7 @@ Section::Section(const std::string& sectionName, const SectionType& type_) : nam
 
 int Section::translateInstruction(const std::string &instruction, const std::vector<Argument> &arguments)
 {
+  std::cout << "Instruction translation[" << instruction << "]" << std::endl;
   std::vector<uint8_t> binaryInstruction = Instructions::translate(instruction, arguments);
   textRepresentationOfInstruction(instruction, arguments);
   if(instruction != "iret")
@@ -45,7 +48,7 @@ int Section::translateInstruction(const std::string &instruction, const std::vec
 
 int Section::executeDirective(const std::string &command, const std::vector<MacroParameter>& parameters)
 {
-
+  std::cout << "Directive execution [" << command << "]" << std::endl;
   Directives::execute(command, parameters);
 
   return 0;
@@ -53,6 +56,7 @@ int Section::executeDirective(const std::string &command, const std::vector<Macr
 
 void Section::defineSymbol(const std::string &symbolName)
 {
+  std::cout << "Definition of the symbol" << std::endl;
   Symbol* tempSymol = SymbolTable::findSymbol(symbolName);
   Macro* tempMacro = MacroTable::findMacro(symbolName);
 
@@ -84,6 +88,11 @@ void Section::defineSymbol(const std::string &symbolName)
   MacroTable::tryToResolveAllMacros(std::vector<std::string>{symbolName}, true);
 }
 
+std::string::size_type Section::findSectionInStringTable(const std::string &sectionName)
+{
+  return tableOfSectionString->findString(sectionName); 
+}
+
 void Section::callocMemory(size_t sizeOfAllocation)
 {
   locationCounter += sizeOfAllocation;
@@ -94,6 +103,7 @@ void Section::callocMemory(size_t sizeOfAllocation)
 
 void Section::insertString(const std::string &stringToInsert)
 {
+  std::cout << "Insert string" << std::endl;
   size_t endOfString = stringToInsert.find("\"", 1);
   std::string text;
   locationCounter += endOfString;

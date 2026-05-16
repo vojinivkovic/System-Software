@@ -4,12 +4,15 @@
 
 #include <cstdlib>
 #include <cstdint>
-#include "aux/string_table.hpp"
+//#include "aux/string_table.hpp"
 #include <vector>
 #include <string>
 #include "aux/directives.hpp"
 #include "aux/instructions.hpp"
 #include "aux/directive_functions.hpp"
+
+
+class StringTable;
 
 class Section
 {
@@ -33,7 +36,7 @@ public:
   void defineSymbol(const std::string& symbolName);
   
   static StringTable* getStringTable() { return tableOfSectionString; }
-  static std::string::size_type findSectionInStringTable(const std::string& sectionName) { return tableOfSectionString->findString(sectionName); }
+  static std::string::size_type findSectionInStringTable(const std::string& sectionName);
   size_t getSectionName() const { return name; }
   std::vector<uint8_t> getContent() const { return content; }
   void callocMemory(size_t sizeOfAllocation);

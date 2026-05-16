@@ -14,12 +14,14 @@ void directiveSection(const std::vector<MacroParameter>& parameters)
   exceptionDirectiveSection(parameters);
   Symbol* tempSymbol = SymbolTable::findSymbol(parameters[0].stringValue);
   Macro* tempMacro = MacroTable::findMacro(parameters[0].stringValue);
-  if(tempSymbol->getType() != Symbol::Type::Section || tempMacro)
+  if(tempSymbol) 
   {
-    throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Directive [.section] can have arguments that is not already non-section symbol or macro", 
-      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+    if(tempSymbol->getType() != Symbol::Type::Section || tempMacro)
+    {
+      throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Directive [.section] can have arguments that is not already non-section symbol or macro", 
+        Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+    }
   }
-
   std::string::size_type findName = Section::findSectionInStringTable(parameters[0].stringValue);
   if(findName == std::string::npos)
   {

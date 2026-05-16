@@ -23,7 +23,7 @@ std::string StringTable::getNameOfElement(const size_t &startIdx) const
   return name;
 }
 
-void StringTable::makeSection(const std::string &name, Section::SectionType type)
+void StringTable::makeSection(const std::string &name, const Section::SectionType& type)
 {
   Section* newSection = new Section(name, type);
   std::vector<uint8_t> content;
