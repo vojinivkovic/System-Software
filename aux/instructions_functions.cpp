@@ -5,6 +5,7 @@
 #include "../symbol/symbol_table.hpp"
 #include "../macro/macro_table.hpp"
 #include <iostream>
+#include <algorithm>
 
 enum class UnconditionalJumpType 
 {
@@ -41,50 +42,43 @@ enum class ShiftOperationType
   Right
 };
 
-static int resolveLiteral(const std::string& literal)
+static uint32_t resolveLiteral(const std::string& literal)
 {
-     std::size_t pos = 0;
+    std::size_t pos = 0;
     bool negative = false;
 
-    if (literal[pos] == '+' || literal[pos] == '-') {
+    if (pos < literal.size() &&
+        (literal[pos] == '+' || literal[pos] == '-'))
+    {
         negative = (literal[pos] == '-');
         ++pos;
     }
 
     int base = 10;
-
     if (pos + 1 < literal.size() &&
         literal[pos] == '0' &&
         (literal[pos + 1] == 'x' || literal[pos + 1] == 'X'))
     {
         base = 16;
+        pos += 2;   // skip 0x
     }
     else if (pos + 1 < literal.size() &&
              literal[pos] == '0' &&
              (literal[pos + 1] == 'b' || literal[pos + 1] == 'B'))
     {
         base = 2;
+        pos += 2; 
     }
 
-    // Parse as unsigned 32-bit value.
-    uint32_t value;
-
-    if (base == 2) {
-        std::size_t digitsPos = pos + 2;
-        value = static_cast<uint32_t>(
-            std::stoul(literal.substr(digitsPos), nullptr, 2)
-        );
-    } else {
-        value = static_cast<uint32_t>(
-            std::stoul(literal.substr(pos), nullptr, base)
-        );
-    }
+    uint32_t value = static_cast<uint32_t>(
+        std::stoul(literal.substr(pos), nullptr, base)
+    );
 
     if (negative) {
-        return -static_cast<int32_t>(value);
+        value = static_cast<uint32_t>(-static_cast<int32_t>(value));
     }
 
-    return static_cast<int32_t>(value);
+    return value;
 }
 
 
@@ -214,7 +208,7 @@ static void exceptionInstructionLoad(const std::vector<Argument>& arguments)
   }
   if(arguments[0].type == ArgumentType::RegisterAndLiteral)
   {
-    signedOperand = resolveLiteral(arguments[0].variable);
+    signedOperand =(int)resolveLiteral(arguments[0].variable);
     if((signedOperand < - (1 << 11) || signedOperand > 1 << 11 - 1))
     {
       throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects (signed) literals that can be represented with 12 bits",
@@ -225,13 +219,17 @@ static void exceptionInstructionLoad(const std::vector<Argument>& arguments)
   if(arguments[0].type == ArgumentType::RegisterAndSymbol)
   {
     Symbol* tempSymbol = SymbolTable::findSymbol(arguments[0].variable);
-    if(tempSymbol->getDefined())
+    if(tempSymbol)
     {
-          throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects symbol which value is known in assembly time",
-    Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter()); 
- 
+      if(tempSymbol->getDefined())
+      {
+            throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects symbol which value is known in assembly time",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter()); 
+  
+      }
     }
     Macro* tempMacro = MacroTable::findMacro(arguments[0].variable);
+    if(tempMacro)
     {
       if(tempMacro->getDefined())
       {
@@ -741,7 +739,141 @@ std::vector<uint8_t> instructionStore(const std::vector<Argument> &arguments)
   }
 
 }
+static std::vector<uint8_t> transformLoadInstruction(const uint8_t& destReg, uint32_t operand)
+{
+  std::vector<uint8_t> instr;
+  uint8_t victimReg;
+  for(size_t i = 1; i <= 13; i++)
+  {
+    if(i != destReg)
+    {
+      victimReg = i;
+      break;
+    }
+  }
+  //PUSH victimReg ON STACK
+  instr.push_back(0x81); 
+  instr.push_back(0xE0);
+  instr.push_back((victimReg << 4) | 0xF);
+  instr.push_back(0xFC);
 
+  //LOAD 8 IN victimReg
+  instr.push_back(0x91);
+  instr.push_back(destReg << 4);
+  instr.push_back(0x00);
+  instr.push_back(0x08);
+
+  //LOAD value[31:24]
+  instr.push_back(0x91);
+  instr.push_back(destReg << 4);
+  instr.push_back(0x00);
+  instr.push_back((operand >> 24) & 0xFF);
+
+  //SHIFT arguments[0].registerNum << victimReg 
+  instr.push_back(0x70);
+  instr.push_back((destReg << 4) | (destReg & 0x0F));
+  instr.push_back(victimReg << 4);
+  instr.push_back(0x00);
+
+
+  //LOAD REST OF THE BYTES
+  for(size_t i = 1; i <= 3; i++)
+  {
+    instr.push_back(0x91);
+    instr.push_back((destReg << 4) | (destReg & 0x0F));
+    instr.push_back(0x00);
+    instr.push_back((operand >> (8 * (3 - i))) & 0xFF);
+    if(i != 3)
+    {
+      instr.push_back(0x70);
+      instr.push_back((destReg << 4) | (destReg & 0x0F));
+      instr.push_back(victimReg << 4);
+      instr.push_back(0x00);
+    }
+  }
+
+  //POP victimReg
+  instr.push_back(0x93);
+  instr.push_back((victimReg << 4) | 0xE);
+  instr.push_back(0x00);
+  instr.push_back(0x04);
+
+  // for(size_t i = 0; i + 3 < instr.size(); i += 4)
+  // {
+  //   std::reverse(instr.begin() + i, instr.begin() + i + 4);
+  // }
+  return instr;
+} 
+static std::vector<uint8_t> instructionImmediateLoad(const std::vector<Argument>& arguments)
+{
+  std::vector<uint8_t> instr;
+  uint32_t operand;
+  if(arguments[0].type == ArgumentType::OperandLiteral)
+  {
+    operand = resolveLiteral(arguments[0].variable);
+    instr =  transformLoadInstruction(arguments[1].registerNum, operand);
+    // for(size_t i = 0; i + 3 < instr.size(); i += 4)
+    // {
+    //   std::reverse(instr.begin() + i, instr.begin() + i + 4);
+    // }
+    return instr;
+  }
+  else
+  {
+    if(Instructions::resolveSymbol(arguments[0].variable, &operand))
+    {
+      instr =  transformLoadInstruction(arguments[1].registerNum, operand);
+      // for(size_t i = 0; i + 3 < instr.size(); i += 4)
+      // {
+      //   std::reverse(instr.begin() + i, instr.begin() + i + 4);
+      // }
+      return instr;
+    }
+    else
+    {
+      instr.push_back(0x91);
+      instr.push_back(arguments[1].registerNum << 4);
+      instr.push_back(0x00);
+      instr.push_back(0x00);
+      //std::reverse(instr.begin(), instr.end());
+      return instr;
+    }
+  }
+}
+static std::vector<uint8_t> transformMemoryDirectLoad(const std::vector<Argument>& arguments)
+{
+  std::vector<uint8_t> instr;
+  uint32_t operand;
+  if(arguments[0].type == ArgumentType::OperandLiteral)
+  {
+    operand = resolveLiteral(arguments[0].variable);
+    instr =  transformLoadInstruction(arguments[1].registerNum, operand);
+  }
+  else
+  {
+    if(Instructions::resolveSymbol(arguments[0].variable, &operand))
+    {
+      instr =  transformLoadInstruction(arguments[1].registerNum, operand);
+    }
+    else
+    {
+      instr.push_back(0x91);
+      instr.push_back(arguments[1].registerNum << 4);
+      instr.push_back(0x00);
+      instr.push_back(0x00);
+    }
+  }
+  instr.push_back(0x92);
+  instr.push_back((arguments[1].registerNum << 4) | (arguments[1].registerNum & 0xF));
+  instr.push_back(0x00);
+  instr.push_back(0X00);
+
+  // for(size_t i = 0; i + 3 < instr.size(); i += 4)
+  // {
+  //   std::reverse(instr.begin() + i, instr.begin() + i + 4);
+  // }
+  return instr;
+}
 std::vector<uint8_t> instructionLoad(const std::vector<Argument> &arguments)
 {
   std::vector<uint8_t> instr;
@@ -749,53 +881,57 @@ std::vector<uint8_t> instructionLoad(const std::vector<Argument> &arguments)
   int signedOperand;
   exceptionInstructionLoad(arguments);
   uint8_t secondField = (arguments[1].registerNum << 4); 
-  if(arguments[0].addressing == AddressingType::RegisterDirect || arguments[0].addressing == AddressingType::Immediate)
+  if(arguments[0].addressing == AddressingType::Immediate)
+  {
+   
+    return instructionImmediateLoad(arguments);
+  }
+  else if(arguments[0].addressing == AddressingType::MemoryDirect)
+  {
+    return transformMemoryDirectLoad(arguments);
+  }
+  else if(arguments[0].addressing == AddressingType::RegisterDirect)
   {
     instr.push_back(0x91);
-  }
-  else
-  {
-    instr.push_back(0x92);
-  }
-  
-  if(arguments[0].addressing == AddressingType::MemoryDirect || arguments[0].addressing == AddressingType::Immediate)
-  {
-    instr.push_back(secondField);
-  }
-  else
-  {
-    instr.push_back(secondField | arguments[0].registerNum);
-  }
-
-  if(arguments[0].addressing == AddressingType::RegisterDirect)
-  {
+    instr.push_back((arguments[1].registerNum << 4) | (arguments[0].registerNum & 0xF));
     instr.push_back(0x00);
     instr.push_back(0x00);
+    return instr;
   }
-  else
+  else if(arguments[0].addressing == AddressingType::RegisterIndirect)
   {
-    if(arguments[0].type == ArgumentType::OperandLiteral || arguments[0].type == ArgumentType::RegisterAndLiteral)
+    if(arguments[0].type == ArgumentType::Register)
     {
-
-      signedOperand = resolveLiteral(arguments[0].variable);
-      instr.push_back((uint32_t)signedOperand >> 8 & 0x0F);
-      instr.push_back((uint32_t)signedOperand & 0xFF);
+      instr.push_back(0x91);
+      instr.push_back((arguments[1].registerNum << 4) | (arguments[0].registerNum & 0xF));
+      instr.push_back(0x00);
+      instr.push_back(0x00);
+      return instr;
     }
     else
     {
-      if(Instructions::resolveSymbol(arguments[0].variable, &operand))
+      instr.push_back(0x92);
+      instr.push_back((arguments[1].registerNum << 4) | (arguments[0].registerNum & 0xF));
+      if(arguments[0].type == ArgumentType::RegisterAndLiteral)
       {
-        instr.push_back(operand >> 8 & 0x0F);
+        operand = resolveLiteral(arguments[0].variable);
+        instr.push_back((operand >> 8) & 0xF);
         instr.push_back(operand & 0xFF);
       }
       else
       {
-        instr.push_back(0x00);
-        instr.push_back(0x00);
+        if(Instructions::resolveSymbol(arguments[0].variable, &operand))
+        {
+          instr.push_back((operand >> 8) & 0xF);
+          instr.push_back(operand & 0xFF);
+        }
+        else
+        {
+          instr.push_back(0x00);
+          instr.push_back(0x00);
+        }
       }
-
+      return instr;
     }
-
   }
-  return instr;
 }

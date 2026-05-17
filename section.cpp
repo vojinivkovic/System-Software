@@ -24,6 +24,9 @@ int Section::translateInstruction(const std::string &instruction, const std::vec
   std::cout << "Instruction translation[" << instruction << "]" << std::endl;
   std::vector<uint8_t> binaryInstruction = Instructions::translate(instruction, arguments);
   textRepresentationOfInstruction(instruction, arguments);
+
+  //FIXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+  content.insert(content.end(), binaryInstruction.begin(), binaryInstruction.end());
   if(instruction != "iret")
   {
     content.insert(content.end(), binaryInstruction.rbegin(), binaryInstruction.rend());

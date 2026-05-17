@@ -42,7 +42,7 @@ std::vector<uint8_t> Instructions::translate(const std::string &instruction_name
   return tableOfInstructions[instruction_name](arguments);
 }
 
-bool Instructions::resolveSymbol(const std::string &symbol, uint32_t* value)
+bool Instructions::resolveSymbol(const std::string &symbol, uint32_t* value, bool acknowledgeSymbol)
 {
   Symbol* tempSymbol = SymbolTable::findSymbol(symbol);
   Macro* tempMacro = MacroTable::findMacro(symbol);
@@ -50,32 +50,34 @@ bool Instructions::resolveSymbol(const std::string &symbol, uint32_t* value)
 
   if(!tempSymbol && !tempMacro)
   {
-    Section* currentSection = Assembler::getCurrentSection();
-    ForwardReference* newForwardReference = new ForwardReference(currentSection->getIdxOfSection(), currentSection->getLocationCounter());
+    if(acknowledgeSymbol)
+    {
+      Section* currentSection = Assembler::getCurrentSection();
+      ForwardReference* newForwardReference = new ForwardReference(currentSection->getIdxOfSection(), currentSection->getLocationCounter());
 
-    Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, 0, 0, 
-                                   Symbol::Binding::NoBinding, Symbol::Type::NoType, Symbol::Scope::NoScope, false, newForwardReference);
-    SymbolTable::addSymbol(symbol, newSymbol);
+      Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, 0, 0, 
+                                    Symbol::Binding::NoBinding, Symbol::Type::NoType, Symbol::Scope::NoScope, false, newForwardReference);
+      SymbolTable::addSymbol(symbol, newSymbol);
+    }
     return false;
   }
   else if(tempSymbol)
   {
-    if(tempSymbol->getDefined())
+    if(tempSymbol->getDefined() && acknowledgeSymbol)
     {
-      *value = tempSymbol->getValue();
       Section* currentSection = Assembler::getCurrentSection();
       RelocationEntry* newReloc = new RelocationEntry(currentSection->getLocationCounter(),
                                                       currentSection->getIdxOfSection(), tempSymbol->getIdx(), 0);
       RelocationTable::addRelocationEntry(newReloc);
-      return true;
+    
     }
-    else
+    else if(acknowledgeSymbol)
     {
       Section* currentSection = Assembler::getCurrentSection();
       ForwardReference* newForwardReference = new ForwardReference(currentSection->getIdxOfSection(), currentSection->getLocationCounter());
       tempSymbol->addForwardReference(newForwardReference);
-      return false;
     }
+    return false;
   }
   else
   {
@@ -84,12 +86,12 @@ bool Instructions::resolveSymbol(const std::string &symbol, uint32_t* value)
       *value = tempMacro->getValue();
       return true;
     }
-    else
+    else if (acknowledgeSymbol)
     {
       Section* currentSection = Assembler::getCurrentSection();
       ForwardReference* newForwardReference = new ForwardReference(currentSection->getIdxOfSection(), currentSection->getLocationCounter());
       tempMacro->addForwardReference(newForwardReference);
-      return false;
     }
+      return false;
   }
 }
