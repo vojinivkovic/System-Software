@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iomanip>
 #include <algorithm>
+#include <iostream>
 
 Section* Assembler::currentSection = nullptr;
 std::vector<Section*> Assembler::arrayOfSections;
@@ -38,8 +39,9 @@ void Assembler::afterFirstPass()
   MacroTable::resolveForwardReference();
   fixRelocationEntries();
   RelocationTable::makeSection();
-  SymbolTable::makeSection();
   Section::makeSectionOfSectionNames();
+  SymbolTable::makeSection();
+  
 }
 
 void Assembler::makeELFFiles(const std::string &name)
@@ -48,34 +50,46 @@ void Assembler::makeELFFiles(const std::string &name)
   std::vector<uint8_t> binaryContent;
   std::vector<std::string> textContent;
 
-  
+  std::cout << "Making Elf files" << std::endl;
 
   for(auto iSection : arrayOfSections)
   {
+
     iSection->setOffsetInFile(sizeOfFile);
     std::vector<uint8_t> tempContent = iSection->getContent();
-    for(size_t i = 0; i < tempContent.size(); i += 4)
+    if(!tempContent.empty())
     {
-      std::reverse(tempContent.begin() + i, tempContent.begin() + i + 4);
+      for(size_t i = 0; i < tempContent.size(); i += 4)
+      {
+        std::reverse(tempContent.begin() + i, tempContent.begin() + i + 4);
+      }
+      binaryContent.insert(binaryContent.end(), tempContent.begin(), tempContent.end());
+      std::vector<std::string> tempStringContent = iSection->getTextContent();
+      if(!tempStringContent.empty())
+      {
+        textContent.insert(textContent.end(), tempStringContent.begin(), tempStringContent.end());
+      }
+      
+      sizeOfFile += iSection->getLocationCounter();
     }
-    binaryContent.insert(binaryContent.end(), tempContent.begin(), tempContent.end());
     
-    textContent.insert(textContent.end(), iSection->getTextContent().begin(), iSection->getTextContent().end());
-    sizeOfFile += iSection->getLocationCounter();
   }
 
   ELFHeader::makeELFHeader(ELFHeader::ELFHeaderType::ELF_REL, 0, 0, sizeOfFile, 0, 0, 
   6 * sizeof(size_t), arrayOfSections.size(), arrayOfSections.size() - 1);
-
-
+  std::cout << "Size: " << sizeof(size_t) << std::endl;
   for(auto iSection : arrayOfSections) 
   {
     binaryContent.insert(binaryContent.end(), iSection->getLittleEndiandOfSection().begin(), iSection->getLittleEndiandOfSection().end());
     textContent.push_back(iSection->getTextFormatOfSection());
   }
-  binaryContent.insert(binaryContent.begin(), ELFHeader::getLittleEndianFormat().begin(), ELFHeader::getLittleEndianFormat().end());
+  
+
+  std::vector<uint8_t> elfHeaderBinaryContent = ELFHeader::getLittleEndianFormat();
+  binaryContent.insert(binaryContent.begin(), elfHeaderBinaryContent.begin(), elfHeaderBinaryContent.end());
   textContent.insert(textContent.begin(), ELFHeader::getStringFormat());
 
+  std::cout << "Before making output file" << std::endl;
   std::ofstream outBin(name);
   outBin << std::hex << std::uppercase << std::setfill('0');
 

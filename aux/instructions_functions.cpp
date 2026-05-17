@@ -331,7 +331,7 @@ static void exceptionInstructionStore(const std::vector<Argument>& arguments)
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
 
   }
-  if(arguments[1].addressing != AddressingType::Immediate)
+  if(arguments[1].addressing == AddressingType::Immediate)
   {
         throw AssemblerErrors(ErrorType::ErrorInvalidAddressing, "Instruction [.st] can't have immediate addressing",
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());

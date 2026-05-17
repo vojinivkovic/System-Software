@@ -27,7 +27,7 @@ int Section::translateInstruction(const std::string &instruction, const std::vec
   textRepresentationOfInstruction(instruction, arguments);
 
   content.insert(content.end(), binaryInstruction.begin(), binaryInstruction.end());
-
+  locationCounter += binaryInstruction.size();
   // if(instruction != "iret")
   // {
   //   content.insert(content.end(), binaryInstruction.rbegin(), binaryInstruction.rend());
@@ -227,88 +227,92 @@ std::string Section::getTextFormatOfSection()
 void Section::textRepresentationOfInstruction(const std::string& command, const std::vector<Argument>& arguments)
 {
   std::string instr;
-  int lastIdx = arguments.size() - 1;
   instr.append(command);
   instr.push_back(' ');
-  for(size_t i = 0; i < arguments.size() - 1; i++)
+  if(!arguments.empty())
   {
-    switch(arguments[i].addressing)
+    int lastIdx = arguments.size() - 1;
+    for(size_t i = 0; i < arguments.size() - 1; i++)
     {
-      case AddressingType::RegisterDirect:
-        instr.append("%r");
-        instr.append(std::to_string(static_cast<unsigned int>(arguments[i].registerNum)));
-        break;
-      case AddressingType::Immediate:
-        if(command == "jmp" || command == "call" || command == "beq" || 
-        command == "bgt" || command == "bne")
-        {
+      switch(arguments[i].addressing)
+      {
+        case AddressingType::RegisterDirect:
+          instr.append("%r");
+          instr.append(std::to_string(static_cast<unsigned int>(arguments[i].registerNum)));
+          break;
+        case AddressingType::Immediate:
+          if(command == "jmp" || command == "call" || command == "beq" || 
+          command == "bgt" || command == "bne")
+          {
+            instr.append(arguments[i].variable);
+          }
+          else
+          {
+            instr.push_back('$');
+            instr.append(arguments[i].variable);
+          }
+          break;
+        case AddressingType::MemoryDirect:
           instr.append(arguments[i].variable);
-        }
-        else
-        {
-          instr.push_back('$');
-          instr.append(arguments[i].variable);
-        }
-        break;
-      case AddressingType::MemoryDirect:
-        instr.append(arguments[i].variable);
-        break;
-      case AddressingType::RegisterIndirect:
-        instr.append("[%r");
-        instr.append(std::to_string(static_cast<unsigned int>(arguments[i].registerNum)));
-        if(arguments[i].type == ArgumentType::Register)
-        {
-          instr.push_back(']');
-        }
-        else
-        {
-          instr.append(" + ");
-          instr.append(arguments[i].variable);
-          instr.push_back(']');
-        }
-        break;
+          break;
+        case AddressingType::RegisterIndirect:
+          instr.append("[%r");
+          instr.append(std::to_string(static_cast<unsigned int>(arguments[i].registerNum)));
+          if(arguments[i].type == ArgumentType::Register)
+          {
+            instr.push_back(']');
+          }
+          else
+          {
+            instr.append(" + ");
+            instr.append(arguments[i].variable);
+            instr.push_back(']');
+          }
+          break;
+      }
+      instr.append(", ");
     }
-    instr.append(", ");
-  }
 
-  if(arguments.size() >= 1)
-  {
-    switch(arguments[lastIdx].addressing)
+    if(arguments.size() >= 1)
     {
-      case AddressingType::RegisterDirect:
-        instr.append("%r");
-        instr.append(std::to_string(static_cast<unsigned int>(arguments[lastIdx].registerNum)));
-        break;
-      case AddressingType::Immediate:
-        if(command == "jmp" || command == "call" || command == "beq" || 
-        command == "bgt" || command == "bne")
-        {
+      switch(arguments[lastIdx].addressing)
+      {
+        case AddressingType::RegisterDirect:
+          instr.append("%r");
+          instr.append(std::to_string(static_cast<unsigned int>(arguments[lastIdx].registerNum)));
+          break;
+        case AddressingType::Immediate:
+          if(command == "jmp" || command == "call" || command == "beq" || 
+          command == "bgt" || command == "bne")
+          {
+            instr.append(arguments[lastIdx].variable);
+          }
+          else
+          {
+            instr.push_back('$');
+            instr.append(arguments[lastIdx].variable);
+          }
+          break;
+        case AddressingType::MemoryDirect:
           instr.append(arguments[lastIdx].variable);
-        }
-        else
-        {
-          instr.push_back('$');
-          instr.append(arguments[lastIdx].variable);
-        }
-        break;
-      case AddressingType::MemoryDirect:
-        instr.append(arguments[lastIdx].variable);
-        break;
-      case AddressingType::RegisterIndirect:
-        instr.append("[%r");
-        instr.append(std::to_string(static_cast<unsigned int>(arguments[lastIdx].registerNum)));
-        if(arguments[lastIdx].type == ArgumentType::Register)
-        {
-          instr.push_back(']');
-        }
-        else
-        {
-          instr.append(" + ");
-          instr.append(arguments[lastIdx].variable);
-          instr.push_back(']');
-        }
-        break;
+          break;
+        case AddressingType::RegisterIndirect:
+          instr.append("[%r");
+          instr.append(std::to_string(static_cast<unsigned int>(arguments[lastIdx].registerNum)));
+          if(arguments[lastIdx].type == ArgumentType::Register)
+          {
+            instr.push_back(']');
+          }
+          else
+          {
+            instr.append(" + ");
+            instr.append(arguments[lastIdx].variable);
+            instr.push_back(']');
+          }
+          break;
+      }
     }
   }
+  
   textContent.push_back(instr);
 }
