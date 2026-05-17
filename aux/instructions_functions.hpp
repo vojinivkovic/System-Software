@@ -81,5 +81,6 @@ std::vector<uint8_t> instructionStore(const std::vector<Argument>& arguments);
 
 std::vector<uint8_t> instructionLoad(const std::vector<Argument>& arguments);
 
+std::vector<uint8_t> transformLoadInstruction(const uint8_t& destReg, uint32_t operand);
 
 #endif

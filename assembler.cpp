@@ -6,6 +6,7 @@
 #include "elf_header.hpp"
 #include <fstream>
 #include <iomanip>
+#include <algorithm>
 
 Section* Assembler::currentSection = nullptr;
 std::vector<Section*> Assembler::arrayOfSections;
@@ -52,7 +53,13 @@ void Assembler::makeELFFiles(const std::string &name)
   for(auto iSection : arrayOfSections)
   {
     iSection->setOffsetInFile(sizeOfFile);
-    binaryContent.insert(binaryContent.end(), iSection->getContent().begin(), iSection->getContent().end());
+    std::vector<uint8_t> tempContent = iSection->getContent();
+    for(size_t i = 0; i < tempContent.size(); i += 4)
+    {
+      std::reverse(tempContent.begin() + i, tempContent.begin() + i + 4);
+    }
+    binaryContent.insert(binaryContent.end(), tempContent.begin(), tempContent.end());
+    
     textContent.insert(textContent.end(), iSection->getTextContent().begin(), iSection->getTextContent().end());
     sizeOfFile += iSection->getLocationCounter();
   }

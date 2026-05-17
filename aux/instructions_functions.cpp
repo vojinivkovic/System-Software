@@ -81,6 +81,71 @@ static uint32_t resolveLiteral(const std::string& literal)
     return value;
 }
 
+std::vector<uint8_t> transformLoadInstruction(const uint8_t& destReg, uint32_t operand)
+{
+  std::vector<uint8_t> instr;
+  uint8_t victimReg;
+  for(size_t i = 1; i <= 13; i++)
+  {
+    if(i != destReg)
+    {
+      victimReg = i;
+      break;
+    }
+  }
+  //PUSH victimReg ON STACK
+  instr.push_back(0x81); 
+  instr.push_back(0xE0);
+  instr.push_back((victimReg << 4) | 0xF);
+  instr.push_back(0xFC);
+
+  //LOAD 8 IN victimReg
+  instr.push_back(0x91);
+  instr.push_back(destReg << 4);
+  instr.push_back(0x00);
+  instr.push_back(0x08);
+
+  //LOAD value[31:24]
+  instr.push_back(0x91);
+  instr.push_back(destReg << 4);
+  instr.push_back(0x00);
+  instr.push_back((operand >> 24) & 0xFF);
+
+  //SHIFT arguments[0].registerNum << victimReg 
+  instr.push_back(0x70);
+  instr.push_back((destReg << 4) | (destReg & 0x0F));
+  instr.push_back(victimReg << 4);
+  instr.push_back(0x00);
+
+
+  //LOAD REST OF THE BYTES
+  for(size_t i = 1; i <= 3; i++)
+  {
+    instr.push_back(0x91);
+    instr.push_back((destReg << 4) | (destReg & 0x0F));
+    instr.push_back(0x00);
+    instr.push_back((operand >> (8 * (3 - i))) & 0xFF);
+    if(i != 3)
+    {
+      instr.push_back(0x70);
+      instr.push_back((destReg << 4) | (destReg & 0x0F));
+      instr.push_back(victimReg << 4);
+      instr.push_back(0x00);
+    }
+  }
+
+  //POP victimReg
+  instr.push_back(0x93);
+  instr.push_back((victimReg << 4) | 0xE);
+  instr.push_back(0x00);
+  instr.push_back(0x04);
+
+  // for(size_t i = 0; i + 3 < instr.size(); i += 4)
+  // {
+  //   std::reverse(instr.begin() + i, instr.begin() + i + 4);
+  // }
+  return instr;
+} 
 
 static void exceptionInstructionConditionalJump(const std::vector<Argument>& arguments)
 {
@@ -285,13 +350,17 @@ static void exceptionInstructionStore(const std::vector<Argument>& arguments)
   if(arguments[1].type == ArgumentType::RegisterAndSymbol)
   {
     Symbol* tempSymbol = SymbolTable::findSymbol(arguments[1].variable);
-    if(tempSymbol->getDefined())
+    if(tempSymbol)
     {
-          throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.st] expects symbol which value is known in assembly time",
-    Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter()); 
+      if(tempSymbol->getDefined())
+      {
+            throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.st] expects symbol which value is known in assembly time",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter()); 
 
+      }
     }
     Macro* tempMacro = MacroTable::findMacro(arguments[1].variable);
+    if(tempMacro)
     {
       if(tempMacro->getDefined())
       {
@@ -302,7 +371,9 @@ static void exceptionInstructionStore(const std::vector<Argument>& arguments)
 
         }
       }
+
     }
+
   }
 }
 
@@ -331,7 +402,6 @@ static std::vector<uint8_t> instructionJumpOrCall(const std::vector<Argument> &a
 {
   std::vector<uint8_t> instr;
   uint32_t operand;
-  int signedOperand;
   Argument arg = arguments[0];
   if(arguments.size() > 1) 
   {
@@ -350,6 +420,30 @@ static std::vector<uint8_t> instructionJumpOrCall(const std::vector<Argument> &a
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
  
   }
+  if(arg.type == ArgumentType::OperandLiteral)
+  {
+    operand = resolveLiteral(arg.variable);
+    instr = transformLoadInstruction(13, operand);
+  }
+  else 
+  {
+    if(Instructions::resolveSymbol(arg.variable, &operand))
+    {
+      if(int(operand) <  0) 
+      {
+          throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instructions [.jmp/call] expects only positive literal or symbol",
+        Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+      }
+      instr =  transformLoadInstruction(13, operand);
+    }
+    else
+    {
+      instr.push_back(0x91);
+      instr.push_back(13 << 4);
+      instr.push_back(0x00);
+      instr.push_back(0x00);
+    }
+  }
   if(typeOfJump == UnconditionalJumpType::Call)
   {
     instr.push_back(0x20);
@@ -358,40 +452,10 @@ static std::vector<uint8_t> instructionJumpOrCall(const std::vector<Argument> &a
   {
     instr.push_back(0x30);
   }
+  instr.push_back(13 << 4);
+  instr.push_back(0x00);
   instr.push_back(0x00);
 
-  if(arg.type == ArgumentType::OperandLiteral)
-  {
-    signedOperand = resolveLiteral(arg.variable);
-    if(signedOperand < 0) 
-    {
-      throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instructions [.jmp/call] can't have negative literal",
-      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
- 
-    }
-    operand = (uint32_t)signedOperand;
-    instr.push_back(operand >> 8 & 0xFF);
-    instr.push_back(operand & 0xFF);
-  }  
-  else
-  {
-    if(Instructions::resolveSymbol(arg.variable, &operand))
-    {
-      if(((int)operand) < 0)
-      {
-        throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instructions [.jmp/call] can only have positive value for adresses",
-        Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
- 
-      }
-      instr.push_back(operand >> 8 & 0x0F);
-      instr.push_back(operand & 0xFF);
-    }
-    else
-    {
-      instr.push_back(0x00);
-      instr.push_back(0x00);
-    }
-  }
   return instr;
 }
 
@@ -411,6 +475,31 @@ static std::vector<uint8_t> instructionConditionalJump(const std::vector<Argumen
   uint32_t operand;
 
   exceptionInstructionConditionalJump(arguments);
+  if(arguments[2].type == ArgumentType::OperandLiteral)
+  {
+    operand = resolveLiteral(arguments[2].variable);
+    instr = transformLoadInstruction(13, operand);
+  }
+  else
+  {
+    if(Instructions::resolveSymbol(arguments[2].variable, &operand))
+    {
+      if((int)operand < 0)
+      {
+        throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instructions [.beq/bnt/bgt] can only have positive value for adresses",
+        Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+
+      }
+      instr = transformLoadInstruction(13, operand);
+    }
+    else
+    {
+      instr.push_back(0x91);
+      instr.push_back(13 << 4);
+      instr.push_back(0x00);
+      instr.push_back(0x00);
+    }
+  }
   switch (typeOfJump)
   {
   case ConditionalJumpType::Equal:
@@ -425,27 +514,11 @@ static std::vector<uint8_t> instructionConditionalJump(const std::vector<Argumen
     break;
   }
 
-  instr.push_back(arguments[0].registerNum);
-
-  if(Instructions::resolveSymbol(arguments[2].variable, &operand))
-  {
-    if(((int)operand) < 0)
-    {
-      throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instructions [.beq/bnt/bgt] can only have positive value for adresses",
-      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
-
-    }
-    instr.push_back((arguments[1].registerNum << 4) | (operand >> 8 & 0x0F));
-    instr.push_back(operand & 0XFF);
-  }
-  else
-  {
-    instr.push_back(arguments[1].registerNum << 4);
-    instr.push_back(0x00);
-  }
+  instr.push_back((13 << 4) | (arguments[0].registerNum & 0xF));
+  instr.push_back(arguments[1].registerNum << 4);
+  instr.push_back(0x00);
 
   return instr;
-
 }
 
 std::vector<uint8_t> instuctionJumpEqual(const std::vector<Argument> &arguments)
@@ -680,7 +753,66 @@ std::vector<uint8_t> instructionWriteToCSRegister(const std::vector<Argument> &a
   instr.push_back(0x00);
   return instr;
 }
+static std::vector<uint8_t>transformMemoryDirectStore(const std::vector<Argument>& arguments)
+{
+  std::vector<uint8_t> instr, tempInstr;
+  uint32_t operand;
+  uint8_t victimReg;
+  for(size_t i = 1; i <= 13; i++)
+  {
+    if(i == arguments[0].registerNum)
+    {
+      victimReg = i;
+      break;
+    }
+  }
 
+  //PUSH victimReg
+  instr.push_back(0x81); 
+  instr.push_back(0xE0);
+  instr.push_back((victimReg << 4) | 0xF);
+  instr.push_back(0xFC);
+
+  if(arguments[1].type == ArgumentType::OperandLiteral)
+  {
+    operand = resolveLiteral(arguments[1].variable);
+    tempInstr = transformLoadInstruction(victimReg, operand);
+    instr.insert(instr.end(), tempInstr.begin(), tempInstr.end());
+  }
+  else 
+  {
+    if(Instructions::resolveSymbol(arguments[1].variable, &operand))
+    {
+      if((int)operand < 0)
+      {
+            throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects positive value for memory direct addressing",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+      }
+      tempInstr = transformLoadInstruction(victimReg, operand);
+      instr.insert(instr.end(), tempInstr.begin(), tempInstr.end());
+    }
+    else
+    {
+      instr.push_back(0x91);
+      instr.push_back(victimReg << 4);
+      instr.push_back(0x00);
+      instr.push_back(0x00);
+    }
+  }
+
+  instr.push_back(0x80);
+  instr.push_back(victimReg << 4);
+  instr.push_back(arguments[0].registerNum << 4);
+  instr.push_back(0x00);
+
+  //POP victimReg
+  instr.push_back(0x93);
+  instr.push_back((victimReg << 4) | 0xE);
+  instr.push_back(0x00);
+  instr.push_back(0x04);
+
+  return instr;
+}
 std::vector<uint8_t> instructionStore(const std::vector<Argument> &arguments)
 {
   std::vector<uint8_t> instr;
@@ -694,116 +826,52 @@ std::vector<uint8_t> instructionStore(const std::vector<Argument> &arguments)
     instr.push_back(0x00);
     instr.push_back(0x00);
     return instr;
-  }
-
-  instr.push_back(0x80);
-  if(arguments[1].addressing == AddressingType::RegisterIndirect)
+  } 
+  else if(arguments[1].addressing == AddressingType::MemoryDirect)
   {
-    instr.push_back(arguments[1].registerNum << 4);
+    return transformMemoryDirectStore(arguments);
   }
-  else
+  else if(arguments[1].addressing == AddressingType::RegisterIndirect)
   {
-    instr.push_back(0x00);
-  }
-
-  if(arguments[1].type == ArgumentType::Register)
-  {
-    instr.push_back(arguments[0].registerNum << 4);
-    instr.push_back(0x00);
-    return instr;
-  }
-  else
-  { 
-    if(arguments[1].type == ArgumentType::RegisterAndLiteral)
+    if(arguments[1].type == ArgumentType::Register)
     {
-      signedOperand = resolveLiteral(arguments[1].variable);
-      instr.push_back((arguments[0].registerNum << 4) | ((uint32_t)signedOperand >> 8 & 0x0F));
-      instr.push_back((uint32_t)signedOperand & 0xFF);
+      instr.push_back(0x80);
+      instr.push_back(arguments[1].registerNum << 4);
+      instr.push_back(arguments[0].registerNum << 4);
+      instr.push_back(0x00);
       return instr;
     }
     else
     {
-      if(Instructions::resolveSymbol(arguments[1].variable, &operand))
+      instr.push_back(0x80);
+      instr.push_back(arguments[1].registerNum << 4);
+      if(arguments[1].type == ArgumentType::RegisterAndLiteral)
       {
-        instr.push_back((arguments[0].registerNum << 4) | (operand >> 8 & 0x0F));
+        operand = resolveLiteral(arguments[1].variable);
+        instr.push_back((arguments[0].registerNum << 4) | ((operand >> 8) & 0xF));
         instr.push_back(operand & 0xFF);
       }
       else
       {
-        instr.push_back(arguments[0].registerNum << 4);
-        instr.push_back(0x00);
+        if(Instructions::resolveSymbol(arguments[1].variable, &operand))
+        {
+          instr.push_back((arguments[0].registerNum << 4) | ((operand >> 8) & 0xF));
+          instr.push_back(operand & 0xFF);
+        }
+        else
+        {
+          instr.push_back(arguments[0].registerNum << 4);
+          instr.push_back(0x00);
+        }
       }
-      return instr;
+      return instr; 
     }
-  
   }
+
+
 
 }
-static std::vector<uint8_t> transformLoadInstruction(const uint8_t& destReg, uint32_t operand)
-{
-  std::vector<uint8_t> instr;
-  uint8_t victimReg;
-  for(size_t i = 1; i <= 13; i++)
-  {
-    if(i != destReg)
-    {
-      victimReg = i;
-      break;
-    }
-  }
-  //PUSH victimReg ON STACK
-  instr.push_back(0x81); 
-  instr.push_back(0xE0);
-  instr.push_back((victimReg << 4) | 0xF);
-  instr.push_back(0xFC);
 
-  //LOAD 8 IN victimReg
-  instr.push_back(0x91);
-  instr.push_back(destReg << 4);
-  instr.push_back(0x00);
-  instr.push_back(0x08);
-
-  //LOAD value[31:24]
-  instr.push_back(0x91);
-  instr.push_back(destReg << 4);
-  instr.push_back(0x00);
-  instr.push_back((operand >> 24) & 0xFF);
-
-  //SHIFT arguments[0].registerNum << victimReg 
-  instr.push_back(0x70);
-  instr.push_back((destReg << 4) | (destReg & 0x0F));
-  instr.push_back(victimReg << 4);
-  instr.push_back(0x00);
-
-
-  //LOAD REST OF THE BYTES
-  for(size_t i = 1; i <= 3; i++)
-  {
-    instr.push_back(0x91);
-    instr.push_back((destReg << 4) | (destReg & 0x0F));
-    instr.push_back(0x00);
-    instr.push_back((operand >> (8 * (3 - i))) & 0xFF);
-    if(i != 3)
-    {
-      instr.push_back(0x70);
-      instr.push_back((destReg << 4) | (destReg & 0x0F));
-      instr.push_back(victimReg << 4);
-      instr.push_back(0x00);
-    }
-  }
-
-  //POP victimReg
-  instr.push_back(0x93);
-  instr.push_back((victimReg << 4) | 0xE);
-  instr.push_back(0x00);
-  instr.push_back(0x04);
-
-  // for(size_t i = 0; i + 3 < instr.size(); i += 4)
-  // {
-  //   std::reverse(instr.begin() + i, instr.begin() + i + 4);
-  // }
-  return instr;
-} 
 static std::vector<uint8_t> instructionImmediateLoad(const std::vector<Argument>& arguments)
 {
   std::vector<uint8_t> instr;
@@ -853,6 +921,12 @@ static std::vector<uint8_t> transformMemoryDirectLoad(const std::vector<Argument
   {
     if(Instructions::resolveSymbol(arguments[0].variable, &operand))
     {
+      if((int)operand < 0)
+      {
+            throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects positive value for memory direct addressing",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+  
+      }
       instr =  transformLoadInstruction(arguments[1].registerNum, operand);
     }
     else

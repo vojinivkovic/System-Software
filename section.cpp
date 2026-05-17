@@ -2,6 +2,7 @@
 #include "assembler.hpp"
 #include "symbol/symbol_table.hpp"
 #include "aux/instructions.hpp"
+#include "aux/instructions_functions.hpp"
 #include "aux/auxiliary_func.hpp"
 #include "macro/macro_table.hpp"
 #include "aux/exceptions.hpp"
@@ -25,26 +26,25 @@ int Section::translateInstruction(const std::string &instruction, const std::vec
   std::vector<uint8_t> binaryInstruction = Instructions::translate(instruction, arguments);
   textRepresentationOfInstruction(instruction, arguments);
 
-  //FIXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
   content.insert(content.end(), binaryInstruction.begin(), binaryInstruction.end());
-  if(instruction != "iret")
-  {
-    content.insert(content.end(), binaryInstruction.rbegin(), binaryInstruction.rend());
-    locationCounter += 4;
-  }
-  else
-  {
-    for(int i = 3; i >= 0; i--)
-    {
-      content.push_back(binaryInstruction[i]);
-    }
-    for(int i = 7; i >= 4; i--)
-    {
-      content.push_back(binaryInstruction[i]);
-    }
-    locationCounter += 8;
-  }
-  
+
+  // if(instruction != "iret")
+  // {
+  //   content.insert(content.end(), binaryInstruction.rbegin(), binaryInstruction.rend());
+  //   locationCounter += 4;
+  // }
+  // else
+  // {
+  //   for(int i = 3; i >= 0; i--)
+  //   {
+  //     content.push_back(binaryInstruction[i]);
+  //   }
+  //   for(int i = 7; i >= 4; i--)
+  //   {
+  //     content.push_back(binaryInstruction[i]);
+  //   }
+  //   locationCounter += 8;
+  // }
   
   return 0;
 }
@@ -131,8 +131,18 @@ void Section::insertContent(const uint32_t &value)
 
 void Section::insertValueInContent(const uint32_t &value, size_t offset)
 {
-  content[offset+1] |= 0X0F & (value >> 8);
-  content[offset] = value & 0xFF; 
+  if(content[offset] == 0x92 || content[offset] == 0x80)
+  {
+    content[offset + 2] = (content[offset + 2] & 0xF0) | ((value >> 8) & 0xF);
+    content[offset + 3] = value & 0xFF;
+  }
+  else
+  {
+    uint8_t tempReg = (content[offset + 1] >> 4 ) & 0xF;
+    content.erase(content.begin() + offset, content.begin() + offset + 4);
+    std::vector<uint8_t> tempInstr = transformLoadInstruction(tempReg, value);
+    content.insert(content.begin() + offset, tempInstr.begin(), tempInstr.end());
+  }
 }
 
 void Section::makeSectionOfSectionNames()

@@ -66,8 +66,8 @@ bool SymbolTable::checkDefinition()
 }
 static bool checkIfLoadStore(std::vector<uint8_t> content, size_t offset)
 {
-  uint8_t firstField = content[offset + 3];
-  if(((firstField >> 4) & 0x0F) == 0x8 || ((firstField >> 4) & 0x0F) == 0x9)
+  uint8_t firstField = content[offset];
+  if(firstField  == 0x80 || firstField == 0x92)
   {
     return true;
   }
