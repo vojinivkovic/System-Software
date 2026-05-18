@@ -86,7 +86,9 @@ std::vector<uint8_t> transformLoadInstruction(const uint8_t& destReg, uint32_t o
 {
   std::vector<uint8_t> instr;
   uint8_t victimReg;
-  for(size_t i = 1; i <= 13; i++)
+  uint8_t dirtyReg = 13;
+
+  for(size_t i = 1; i <= 12; i++)
   {
     if(i != destReg)
     {
@@ -102,19 +104,19 @@ std::vector<uint8_t> transformLoadInstruction(const uint8_t& destReg, uint32_t o
 
   //LOAD 8 IN victimReg
   instr.push_back(0x91);
-  instr.push_back(destReg << 4);
+  instr.push_back(victimReg << 4);
   instr.push_back(0x00);
   instr.push_back(0x08);
 
   //LOAD value[31:24]
   instr.push_back(0x91);
-  instr.push_back(destReg << 4);
+  instr.push_back(dirtyReg << 4);
   instr.push_back(0x00);
   instr.push_back((operand >> 24) & 0xFF);
 
   //SHIFT arguments[0].registerNum << victimReg 
   instr.push_back(0x70);
-  instr.push_back((destReg << 4) | (destReg & 0x0F));
+  instr.push_back((dirtyReg << 4) | (dirtyReg & 0x0F));
   instr.push_back(victimReg << 4);
   instr.push_back(0x00);
 
@@ -123,13 +125,13 @@ std::vector<uint8_t> transformLoadInstruction(const uint8_t& destReg, uint32_t o
   for(size_t i = 1; i <= 3; i++)
   {
     instr.push_back(0x91);
-    instr.push_back((destReg << 4) | (destReg & 0x0F));
+    instr.push_back((dirtyReg << 4) | (dirtyReg & 0x0F));
     instr.push_back(0x00);
     instr.push_back((operand >> (8 * (3 - i))) & 0xFF);
     if(i != 3)
     {
       instr.push_back(0x70);
-      instr.push_back((destReg << 4) | (destReg & 0x0F));
+      instr.push_back((dirtyReg << 4) | (dirtyReg & 0x0F));
       instr.push_back(victimReg << 4);
       instr.push_back(0x00);
     }
@@ -140,6 +142,12 @@ std::vector<uint8_t> transformLoadInstruction(const uint8_t& destReg, uint32_t o
   instr.push_back((victimReg << 4) | 0xE);
   instr.push_back(0x00);
   instr.push_back(0x04);
+
+  //LOAD dirtyReg to destReg
+  instr.push_back(0x91);
+  instr.push_back((destReg << 4) | 0xD);
+  instr.push_back(0x00);
+  instr.push_back(0x00);
 
   // for(size_t i = 0; i + 3 < instr.size(); i += 4)
   // {
@@ -758,23 +766,23 @@ static std::vector<uint8_t>transformMemoryDirectStore(const std::vector<Argument
 {
   std::vector<uint8_t> instr, tempInstr;
   uint32_t operand;
-  uint8_t victimReg;
-  for(size_t i = 1; i <= 13; i++)
-  {
-    if(i == arguments[0].registerNum)
-    {
-      victimReg = i;
-      break;
-    }
-  }
+  uint8_t victimReg = 13;
+  // for(size_t i = 1; i <= 13; i++)
+  // {
+  //   if(i == arguments[0].registerNum)
+  //   {
+  //     victimReg = i;
+  //     break;
+  //   }
+  // }
 
   //PUSH victimReg
-  instr.push_back(0x81); 
-  instr.push_back(0xE0);
-  instr.push_back((victimReg << 4) | 0xF);
-  instr.push_back(0xFC);
+  // instr.push_back(0x81); 
+  // instr.push_back(0xE0);
+  // instr.push_back((victimReg << 4) | 0xF);
+  // instr.push_back(0xFC);
 
-  Assembler::getCurrentSection()->incrementLocationCounter(4);
+  // Assembler::getCurrentSection()->incrementLocationCounter(4);
 
   if(arguments[1].type == ArgumentType::OperandLiteral)
   {
@@ -803,16 +811,18 @@ static std::vector<uint8_t>transformMemoryDirectStore(const std::vector<Argument
     }
   }
 
+  //Assembler::getCurrentSection()->incrementLocationCounter(-4);
+
   instr.push_back(0x80);
   instr.push_back(victimReg << 4);
   instr.push_back(arguments[0].registerNum << 4);
   instr.push_back(0x00);
 
   //POP victimReg
-  instr.push_back(0x93);
-  instr.push_back((victimReg << 4) | 0xE);
-  instr.push_back(0x00);
-  instr.push_back(0x04);
+  // instr.push_back(0x93);
+  // instr.push_back((victimReg << 4) | 0xE);
+  // instr.push_back(0x00);
+  // instr.push_back(0x04);
 
   return instr;
 }
