@@ -1,5 +1,6 @@
 #include "instructions_functions.hpp"
 #include "../assembler.hpp"
+#include "../section.hpp"
 #include "instructions.hpp"
 #include "exceptions.hpp"
 #include "../symbol/symbol_table.hpp"
@@ -772,6 +773,8 @@ static std::vector<uint8_t>transformMemoryDirectStore(const std::vector<Argument
   instr.push_back(0xE0);
   instr.push_back((victimReg << 4) | 0xF);
   instr.push_back(0xFC);
+
+  Assembler::getCurrentSection()->incrementLocationCounter(4);
 
   if(arguments[1].type == ArgumentType::OperandLiteral)
   {

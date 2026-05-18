@@ -80,7 +80,10 @@ void Section::defineSymbol(const std::string &symbolName)
     tempSymol->setValue(locationCounter);
     tempSymol->setSection(idxSection);
     tempSymol->setType(Symbol::Type::Object);
-    tempSymol->setScope(Symbol::Scope::Local);
+    if(tempSymol->getScope() == Symbol::Scope::NoScope)
+    {
+      tempSymol->setScope(Symbol::Scope::Local);
+    }
     tempSymol->setDefined();
   }
   else
