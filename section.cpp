@@ -150,6 +150,11 @@ void Section::makeSectionOfSectionNames()
   tableOfSectionString->makeSection(".secstrtab", Section::SectionType::SectionStrTabSection);
 }
 
+void Section::makeContentOfSectionsNames()
+{
+  tableOfSectionString->makeContentOfSection();
+}
+
 static std::vector<uint8_t> convertToLittleEndiand(size_t classMember)
 {
   std::vector<uint8_t> littleEndianFormat;

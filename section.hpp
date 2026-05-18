@@ -49,6 +49,7 @@ public:
   void setTextContent (const std::vector<std::string>& textContent_) { textContent = textContent_; }
   void incrementLocationCounter(size_t increment) { locationCounter += increment; }
   static void makeSectionOfSectionNames();
+  static void makeContentOfSectionsNames();
   std::vector<uint8_t> getLittleEndiandOfSection();
   std::string getTextFormatOfSection();
 

@@ -6,6 +6,7 @@
 
 StringTable* SymbolTable::tableOfSymbolString = new StringTable(StringTable::STType::SymbolName);
 std::vector<Symbol*> SymbolTable::table;
+Section* SymbolTable::sectionSymbolTable = nullptr;
 
 void SymbolTable::addSymbol(const std::string &name, Symbol *newSymbol)
 {
@@ -101,7 +102,13 @@ void SymbolTable::resolveForwardReference()
 
 void SymbolTable::makeSection()
 {
-  Section* newSection = new Section(".symtable", Section::SectionType::SymTabSection);
+  sectionSymbolTable = new Section(".symtable", Section::SectionType::SymTabSection);
+  Assembler::addSection(sectionSymbolTable);
+  tableOfSymbolString->makeSection(".symstrtab", Section::SectionType::SymStrTabSection);
+}
+
+void SymbolTable::addContentInSection()
+{
   std::vector<uint8_t> content;
   std::vector<uint8_t> subContent;
   std::string subContentString;
@@ -111,7 +118,7 @@ void SymbolTable::makeSection()
   {
     subContent = iSymbol->getLittleEndianFormatOfSymbol();
     content.insert(content.end(), subContent.begin(), subContent.end());
-    newSection->incrementLocationCounter(7 * sizeof(size_t));
+    sectionSymbolTable->incrementLocationCounter(7 * sizeof(size_t));
     subContentString = "Name: " + std::to_string(iSymbol->getName()) +
       ", Size: " + std::to_string(iSymbol->getSize()) + 
       ", Value: " + std::to_string(iSymbol->getValue()) + 
@@ -123,9 +130,7 @@ void SymbolTable::makeSection()
     textContent.push_back(subContentString);
   }
 
-  newSection->setContent(content);
-  newSection->setTextContent(textContent);
-  Assembler::addSection(newSection);
-
-  tableOfSymbolString->makeSection(".symstrtab", Section::SectionType::SymStrTabSection);
+  sectionSymbolTable->setContent(content);
+  sectionSymbolTable->setTextContent(textContent);
+  tableOfSymbolString->makeContentOfSection();
 }

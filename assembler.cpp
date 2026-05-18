@@ -39,9 +39,10 @@ void Assembler::afterFirstPass()
   MacroTable::resolveForwardReference();
   fixRelocationEntries();
   RelocationTable::makeSection();
-  Section::makeSectionOfSectionNames();
   SymbolTable::makeSection();
-  
+  Section::makeSectionOfSectionNames();
+  SymbolTable::addContentInSection();
+  Section::makeContentOfSectionsNames(); 
 }
 
 void Assembler::makeELFFiles(const std::string &name)
@@ -77,10 +78,11 @@ void Assembler::makeELFFiles(const std::string &name)
 
   ELFHeader::makeELFHeader(ELFHeader::ELFHeaderType::ELF_REL, 0, 0, sizeOfFile, 0, 0, 
   6 * sizeof(size_t), arrayOfSections.size(), arrayOfSections.size() - 1);
-  std::cout << "Size: " << sizeof(size_t) << std::endl;
+
   for(auto iSection : arrayOfSections) 
   {
-    binaryContent.insert(binaryContent.end(), iSection->getLittleEndiandOfSection().begin(), iSection->getLittleEndiandOfSection().end());
+    std::vector<uint8_t> tempContentSec = iSection->getLittleEndiandOfSection();
+    binaryContent.insert(binaryContent.end(), tempContentSec.begin(), tempContentSec.end());
     textContent.push_back(iSection->getTextFormatOfSection());
   }
   
@@ -89,7 +91,6 @@ void Assembler::makeELFFiles(const std::string &name)
   binaryContent.insert(binaryContent.begin(), elfHeaderBinaryContent.begin(), elfHeaderBinaryContent.end());
   textContent.insert(textContent.begin(), ELFHeader::getStringFormat());
 
-  std::cout << "Before making output file" << std::endl;
   std::ofstream outBin(name);
   outBin << std::hex << std::uppercase << std::setfill('0');
 

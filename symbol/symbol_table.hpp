@@ -21,11 +21,13 @@ public:
   static void resolveForwardReference();
   static std::vector<Symbol*> getSymbolTable() { return table; }
   static void makeSection();
+  static void addContentInSection();
 
 private:
   static size_t currentSection;
   static std::vector<Symbol*> table;
   static StringTable* tableOfSymbolString;
+  static Section* sectionSymbolTable;
 };
 
 #endif
