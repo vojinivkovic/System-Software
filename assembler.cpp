@@ -90,6 +90,9 @@ void Assembler::makeELFFiles(const std::string &name)
   std::vector<uint8_t> elfHeaderBinaryContent = ELFHeader::getLittleEndianFormat();
   binaryContent.insert(binaryContent.begin(), elfHeaderBinaryContent.begin(), elfHeaderBinaryContent.end());
   textContent.insert(textContent.begin(), ELFHeader::getStringFormat());
+  textContent.push_back(MacroTable::getMacroNames());
+  std::vector<std::string> textRepresentationMacroTable = MacroTable::getTextRepresentationOfMacros();
+  textContent.insert(textContent.end(), textRepresentationMacroTable.begin(), textRepresentationMacroTable.end());
 
   std::ofstream outBin(name);
   outBin << std::hex << std::uppercase << std::setfill('0');

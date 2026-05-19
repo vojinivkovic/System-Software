@@ -743,6 +743,21 @@ std::vector<uint8_t> instructionReturnFromInterrupt(const std::vector<Argument> 
   return instr;
 }
 
+std::vector<uint8_t> instructionReturnFromFunction(const std::vector<Argument> &arguments)
+{
+  if(arguments.size() > 0)
+  {
+    throw AssemblerErrors(ErrorType::ErrorTooManyArguments, "Instruction [.ret] doesn't have arguments", 
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+  }
+  
+  std::vector<uint8_t> instr{0x93};
+  instr.push_back(0xFE);
+  instr.push_back(0x00);
+  instr.push_back(0x04);
+  return instr;
+}
+
 std::vector<uint8_t> instructionReadFromCSRegister(const std::vector<Argument> &arguments)
 {
   exceptionSpecialRegisters(arguments, true);

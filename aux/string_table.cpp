@@ -1,5 +1,6 @@
 #include "string_table.hpp"
 #include "../assembler.hpp"
+#include <cstring>
 
 void StringTable::addString(const std::string& name)
 {
@@ -9,8 +10,21 @@ void StringTable::addString(const std::string& name)
 
 std::string::size_type StringTable::findString(const std::string &name)
 {
-  std::string::size_type findPosition = tableOfNames.find(name);
-  return findPosition;
+  size_t pos = 0;
+
+  while (pos < tableOfNames.size()) 
+  {
+    size_t len = std::strlen(tableOfNames.data() + pos);
+
+    if (len == name.size() && tableOfNames.compare(pos, len, name) == 0) 
+    {
+      return pos;
+    }
+
+    pos += len + 1;
+  }
+
+  return std::string::npos; 
 }
 
 std::string StringTable::getNameOfElement(const size_t &startIdx) const

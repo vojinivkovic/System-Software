@@ -28,7 +28,7 @@ std::unordered_map<std::string, std::vector<uint8_t> (*)(const std::vector<Argum
   {"shr", instructionShiftRight},
   {"push", instructionPush},
   {"pop", instructionPop},
-  {"ret", instructionPop},
+  {"ret", instructionReturnFromFunction},
   {"iret", instructionReturnFromInterrupt},
   {"csrrd", instructionReadFromCSRegister},
   {"csrwr", instructionWriteToCSRegister},

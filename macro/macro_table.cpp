@@ -107,3 +107,16 @@ void MacroTable::resolveForwardReference()
     }
   }
 }
+
+std::vector<std::string> MacroTable::getTextRepresentationOfMacros()
+{
+  std::vector<std::string> macroTable;
+  std::string tempElem;
+  for(auto iMacro : table)
+  {
+    tempElem = "Name: " + std::to_string(iMacro->getName()) + 
+    ", Value: " + std::to_string(iMacro->getValue());
+    macroTable.push_back(tempElem);
+  }
+  return macroTable;
+}

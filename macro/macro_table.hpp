@@ -18,6 +18,8 @@ public:
   static std::string getNameOfMacro(size_t name);
   static bool checkDefinition();
   static void resolveForwardReference();
+  static std::string getMacroNames() { return tableOfMacroString->getNames(); }
+  static std::vector<std::string> getTextRepresentationOfMacros();
 
 private:
   static std::vector<Macro*> table;
