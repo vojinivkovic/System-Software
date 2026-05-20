@@ -117,9 +117,10 @@ void Assembler::makeELFFiles(const std::string &name)
 
 void Assembler::checkIfSymbolsDefined()
 {
-  if(!SymbolTable::checkDefinition())
+  Symbol* undefinedSymbol;
+  if(!SymbolTable::checkDefinition(undefinedSymbol))
   {
-    throw AssemblerErrors(ErrorType::ErrorUndefinedSymbol, "Symbol is not defined",
+    throw AssemblerErrors(ErrorType::ErrorUndefinedSymbol, "Symbol {" + SymbolTable::getNameOfSymbol(undefinedSymbol->getName()) + "} is not defined",
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
  
   }
@@ -127,9 +128,10 @@ void Assembler::checkIfSymbolsDefined()
 
 void Assembler::checkIfMacrosDefined()
 {
-  if(!MacroTable::checkDefinition())
+  Macro* undefinedMacro;
+  if(!MacroTable::checkDefinition(undefinedMacro))
   {
-    throw AssemblerErrors(ErrorType::ErrorUndefinedMacro, "Macro is not defined",
+    throw AssemblerErrors(ErrorType::ErrorUndefinedMacro, "Macro {" + MacroTable::getNameOfMacro(undefinedMacro->getName()) + "} is not defined",
       Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   
   }

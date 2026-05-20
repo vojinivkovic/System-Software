@@ -16,7 +16,7 @@ public:
   static void AddMacro(const std::string& name, Macro* newMacro);
   static void tryToResolveAllMacros(const std::vector<std::string>& definedSymbols, bool pureSymbol);
   static std::string getNameOfMacro(size_t name);
-  static bool checkDefinition();
+  static bool checkDefinition(Macro*& undefinedMacro);
   static void resolveForwardReference();
   static std::string getMacroNames() { return tableOfMacroString->getNames(); }
   static std::vector<std::string> getTextRepresentationOfMacros();

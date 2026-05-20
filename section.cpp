@@ -26,7 +26,7 @@ int Section::translateInstruction(const std::string &instruction, const std::vec
   std::cout << "Instruction translation[" << instruction << "]" << std::endl;
   std::vector<uint8_t> binaryInstruction = Instructions::translate(instruction, arguments);
   textRepresentationOfInstruction(instruction, arguments);
-  for(size_t i = 0; i < binaryInstruction.size(); i++)
+  for(size_t i = 0; i < binaryInstruction.size(); i += 4)
   {
     std::reverse(binaryInstruction.begin() + i, binaryInstruction.begin() + i + 4);
   }

@@ -66,12 +66,13 @@ void SymbolTable::removeSymbolFromTable(const Symbol *tempSymbol)
 
 }
 
-bool SymbolTable::checkDefinition()
+bool SymbolTable::checkDefinition(Symbol*& undefinedSymbol)
 {
   for(auto iSymbol : table)
   {
     if(!iSymbol->getDefined() && iSymbol->getBinding() != Symbol::Binding::Import)
     {
+      undefinedSymbol = iSymbol;
       return false;
     }
   }
@@ -145,4 +146,9 @@ void SymbolTable::addContentInSection()
   sectionSymbolTable->setContent(content);
   sectionSymbolTable->setTextContent(textContent);
   tableOfSymbolString->makeContentOfSection();
+}
+
+std::string SymbolTable::getNameOfSymbol(const size_t &name)
+{
+  return tableOfSymbolString->getNameOfElement(name);
 }

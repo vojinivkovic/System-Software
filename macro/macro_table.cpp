@@ -61,12 +61,13 @@ std::string MacroTable::getNameOfMacro(size_t name)
   return tableOfMacroString->getNameOfElement(name);
 }
 
-bool MacroTable::checkDefinition()
+bool MacroTable::checkDefinition(Macro*& undefinedMacro)
 {
   for(auto iMacro : table)
   {
     if(!iMacro->getDefined())
     {
+      undefinedMacro = iMacro;
       return false;
     }
   }

@@ -71,10 +71,18 @@ int main(int argc, char* argv[])
   }
   catch(AssemblerErrors& err)
   {
-    std::cout << "Error[" << err.toString(err.getErrorType()) << "]" << std::endl
-              << "In section name[offset]: " << err.getSectionName() << "; Byte Number: " << err.getLineInSection() << std::endl
-              << err.what() << std::endl;
-            
+    if(err.getErrorType() == ErrorType::ErrorUndefinedSymbol || err.getErrorType() == ErrorType::ErrorUndefinedMacro)
+    {
+      std::cout << "Error[" << err.toString(err.getErrorType()) << "]" << std::endl
+      << err.what() << std::endl;
+    }
+    else 
+    {
+      std::cout << "Error[" << err.toString(err.getErrorType()) << "]" << std::endl
+                << "In section name[offset]: " << err.getSectionName() << "; Byte Number: " << err.getLineInSection() << std::endl
+                << err.what() << std::endl;
+    }
+    
     if(!err.getDetailMessage().empty())
     {
       std::cout << "(" << err.getDetailMessage() << ")" << std::endl; 

@@ -310,7 +310,7 @@ void directiveAscii(const std::vector<MacroParameter>& parameters)
   if(tempSymbol) 
   {
     tempSymbol->setType(Symbol::Type::String);
-    tempSymbol->setSize(parameters[0].stringValue.size() + 1);
+    tempSymbol->setSize(parameters[0].stringValue.size() - 1);
   }
   currentSection->insertString(parameters[0].stringValue);
 }

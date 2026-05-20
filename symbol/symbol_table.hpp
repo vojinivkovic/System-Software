@@ -18,11 +18,12 @@ public:
   static Symbol* findSymbol(const std::string& name);
   static Symbol* findSymbolInSection(const size_t& sectionIdx, const size_t& offset);
   static void removeSymbolFromTable(const Symbol* tempSymbol);
-  static bool checkDefinition();
+  static bool checkDefinition(Symbol*& undefinedSymbol);
   static void resolveForwardReference();
   static std::vector<Symbol*> getSymbolTable() { return table; }
   static void makeSection();
   static void addContentInSection();
+  static std::string getNameOfSymbol(const size_t& name);
 
 private:
   static size_t currentSection;
