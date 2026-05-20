@@ -146,9 +146,13 @@ void directiveWord(const std::vector<MacroParameter> &parameters)
 
   uint32_t value;
   Section* currSection = Assembler::getCurrentSection();
-
   exceptionDirectiveWord(parameters);
-
+  Symbol* tempSymbol = SymbolTable::findSymbolInSection(currSection->getIdxOfSection(), currSection->getLocationCounter());
+  if(tempSymbol)
+  {
+    tempSymbol->setType(Symbol::Type::WordArray);
+    tempSymbol->setSize(4 * parameters.size());
+  }
   for(auto iParameter: parameters)
   {
     if(iParameter.type == MacroParameterType::Symbol)
@@ -302,6 +306,12 @@ void directiveAscii(const std::vector<MacroParameter>& parameters)
 
   exceptionDirectiveAscii(parameters);
   Section* currentSection = Assembler::getCurrentSection();
+  Symbol* tempSymbol = SymbolTable::findSymbolInSection(currentSection->getIdxOfSection(), currentSection->getLocationCounter());
+  if(tempSymbol) 
+  {
+    tempSymbol->setType(Symbol::Type::String);
+    tempSymbol->setSize(parameters[0].stringValue.size() + 1);
+  }
   currentSection->insertString(parameters[0].stringValue);
 }
 

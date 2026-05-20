@@ -31,6 +31,18 @@ Symbol *SymbolTable::findSymbol(const std::string &name)
   }
 }
 
+Symbol *SymbolTable::findSymbolInSection(const size_t &sectionIdx, const size_t &offset)
+{
+  for(auto iSymbol : table)
+  {
+    if((iSymbol->getSection() == sectionIdx) && (iSymbol->getValue() == offset))
+    {
+      return iSymbol;
+    }
+  }
+  return nullptr;
+}
+
 void SymbolTable::removeSymbolFromTable(const Symbol *tempSymbol)
 {
   for(auto it = table.begin(); it != table.end();)

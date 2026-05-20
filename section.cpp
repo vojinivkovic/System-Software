@@ -8,6 +8,7 @@
 #include "aux/exceptions.hpp"
 #include "aux/string_table.hpp"
 #include <iostream>
+#include <algorithm>
 
 StringTable* Section::tableOfSectionString = new StringTable(StringTable::STType::SectionName);
 
@@ -25,7 +26,10 @@ int Section::translateInstruction(const std::string &instruction, const std::vec
   std::cout << "Instruction translation[" << instruction << "]" << std::endl;
   std::vector<uint8_t> binaryInstruction = Instructions::translate(instruction, arguments);
   textRepresentationOfInstruction(instruction, arguments);
-
+  for(size_t i = 0; i < binaryInstruction.size(); i++)
+  {
+    std::reverse(binaryInstruction.begin() + i, binaryInstruction.begin() + i + 4);
+  }
   content.insert(content.end(), binaryInstruction.begin(), binaryInstruction.end());
   locationCounter += binaryInstruction.size();
   // if(instruction != "iret")
@@ -110,10 +114,10 @@ void Section::callocMemory(size_t sizeOfAllocation)
 void Section::insertString(const std::string &stringToInsert)
 {
   std::cout << "Insert string" << std::endl;
-  size_t endOfString = stringToInsert.find("\"", 1);
+  size_t endOfString = stringToInsert.size();
   std::string text;
-  locationCounter += endOfString;
-  for(size_t i = 1; i < endOfString; i++)
+  locationCounter += endOfString + 1;
+  for(size_t i = 0; i < endOfString; i++)
   {
     content.push_back(stringToInsert[i]);
     text.push_back(stringToInsert[i]);

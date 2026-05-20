@@ -27,7 +27,9 @@ public:
     NoType, 
     Object,
     Function, 
-    Section
+    Section,
+    String,
+    WordArray
   };
 
   Symbol(const size_t& idx_, 
@@ -59,6 +61,7 @@ public:
 }
   size_t getName() const { return name; }
   size_t getSize() const { return size; }
+  void setSize(size_t size_) { size = size_; }
   void setBinding(Binding bind_) { bind = bind_; }
   Binding getBinding() const { return bind; } 
 

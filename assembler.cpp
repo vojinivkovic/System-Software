@@ -60,10 +60,10 @@ void Assembler::makeELFFiles(const std::string &name)
     std::vector<uint8_t> tempContent = iSection->getContent();
     if(!tempContent.empty())
     {
-      for(size_t i = 0; i < tempContent.size(); i += 4)
-      {
-        std::reverse(tempContent.begin() + i, tempContent.begin() + i + 4);
-      }
+      // for(size_t i = 0; i < tempContent.size(); i += 4)
+      // {
+      //   std::reverse(tempContent.begin() + i, tempContent.begin() + i + 4);
+      // }
       binaryContent.insert(binaryContent.end(), tempContent.begin(), tempContent.end());
       std::vector<std::string> tempStringContent = iSection->getTextContent();
       if(!tempStringContent.empty())
