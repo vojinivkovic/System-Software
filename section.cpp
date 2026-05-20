@@ -114,10 +114,10 @@ void Section::callocMemory(size_t sizeOfAllocation)
 void Section::insertString(const std::string &stringToInsert)
 {
   std::cout << "Insert string" << std::endl;
-  size_t endOfString = stringToInsert.size();
+  size_t endOfString = stringToInsert.size() - 1;
   std::string text;
-  locationCounter += endOfString + 1;
-  for(size_t i = 0; i < endOfString; i++)
+  locationCounter += endOfString;
+  for(size_t i = 1; i < endOfString; i++)
   {
     content.push_back(stringToInsert[i]);
     text.push_back(stringToInsert[i]);
