@@ -46,18 +46,24 @@ static uint8_t parseSPRegister(const char* variable)
      }
 }
 
-static int resolveLiteral(const std::string& literal)
+static std::uint32_t resolveLiteral(const std::string& literal)
 {
-     if (literal.empty()) {
+     if (literal.empty()) 
+     {
           throw std::invalid_argument("Empty literal");
      }
 
     std::size_t pos = 0;
-    if (literal[pos] == '+' || literal[pos] == '-') {
-        pos++;
-        if (pos >= literal.size()) {
-            throw std::invalid_argument("Literal contains only a sign");
-        }
+    bool negative = false;
+
+    if (literal[pos] == '+' || literal[pos] == '-') 
+    {
+          negative = (literal[pos] == '-');
+          pos++;
+          if (pos >= literal.size()) 
+          {
+               throw std::invalid_argument("Literal contains only a sign");
+          }
      }
 
     int base = 10;
@@ -83,15 +89,26 @@ static int resolveLiteral(const std::string& literal)
         throw std::invalid_argument("Missing digits in literal: " + literal);
     }
 
-
-    if (base == 2) {
-        bool negative = (literal[0] == '-');
-        int value = std::stoi(literal.substr(digitsPos), nullptr, 2);
-        return negative ? -value : value;
+    std::uint64_t value;
+    if (base == 2) 
+    {
+        value = std::stoull(literal.substr(digitsPos), nullptr, 2);
+    }
+    else
+    {
+          value = std::stoull(literal, nullptr, base);
     }
 
-    
-    return std::stoi(literal, nullptr, base);
+    if(negative)
+    {
+          value = static_cast<std::uint64_t>(static_cast<std::uint32_t>(-static_cast<std::int64_t>(value)));
+    }
+
+    if (value > std::numeric_limits<std::uint32_t>::max()) 
+    {
+        throw std::out_of_range("Literal does not fit in 32 bits: " + literal);
+    }
+    return static_cast<std::uint32_t>(value);
 }
 
 std::vector<Argument> args;
@@ -190,7 +207,8 @@ list_of_parameters : SYMBOL {
                          free($1);
                     }    
                    | signed_literal {
-                         int value = resolveLiteral($1);
+                         std::uint32_t raw = resolveLiteral($1);
+                         std::int32_t value = static_cast<std::int32_t>(raw); 
                          free($1);
                          params.push_back(MacroParameter{MacroParameterType::Literal, "", value, {}});
                    }
@@ -199,7 +217,8 @@ list_of_parameters : SYMBOL {
                          free($3);
                     } 
                    | list_of_parameters ',' signed_literal {
-                         int value = resolveLiteral($3);
+                         std::uint32_t raw = resolveLiteral($3);
+                         std::int32_t value = static_cast<std::int32_t>(raw); 
                          free($3);
                          params.push_back(MacroParameter{MacroParameterType::Literal, "", value, {}});
                    }
@@ -227,7 +246,8 @@ term : SYMBOL {
           free($1);
      }
      | LITERAL {
-          int value = resolveLiteral($1);
+          std::uint32_t raw = resolveLiteral($1);
+          std::int32_t value = static_cast<std::int32_t>(raw); 
           $$ = new std::vector<Token>{Token{TokenType::LITERAL, value, ""}};
           free($1);
      }
@@ -259,7 +279,8 @@ base : SYMBOL {
           free($1);
      }
      | LITERAL {
-          int value = resolveLiteral($1);
+          std::uint32_t raw = resolveLiteral($1);
+          std::int32_t value = static_cast<std::int32_t>(raw); 
           $$ = new std::vector<Token>{Token{TokenType::LITERAL, value, ""}};
           free($1);
      }

@@ -71,10 +71,10 @@ void ExpressionResolver::infixToPostfix(const std::vector<Token>& expr)
   }
 }
 
-int ExpressionResolver::evaluate()
+std::int32_t ExpressionResolver::evaluate()
 {
   Token operand1, operand2;
-  int operand1Value, operand2Value;
+  std::int64_t operand1Value, operand2Value;
   Macro* tempMacro;
   for(size_t i = 0; i < postfixExpression.size(); i++)
   {
@@ -152,7 +152,7 @@ int ExpressionResolver::evaluate()
   postfixExpression = {};
   if(auxStack.empty())
   {
-    return operand1Value;
+    return static_cast<int32_t>(operand1Value);
     
   }
   else
@@ -162,7 +162,7 @@ int ExpressionResolver::evaluate()
   return 0;
 }
 
-int ExpressionResolver::evaluteExpression(const std::vector<Token> &expr)
+std::int32_t ExpressionResolver::evaluteExpression(const std::vector<Token> &expr)
 {
   infixToPostfix(expr);
   return evaluate();

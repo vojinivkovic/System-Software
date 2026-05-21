@@ -17,7 +17,7 @@ class Macro
     
     size_t getName() const { return name; }
     bool getDefined() const { return defined; }
-    int getValue() const {return value; }
+    std::int32_t getValue() const {return value; }
     void addForwardReference(ForwardReference* newReference) { tableForwardReference.push_back(newReference); }
     std::vector<ForwardReference*> getForwardReference() const { return tableForwardReference; }
     bool checkForResolving(std::vector<std::string> definedSymbols, bool* ifContains);
@@ -26,7 +26,7 @@ class Macro
     private:
     bool defined;
     size_t name;
-    int value;
+    std::int32_t value;
     std::vector<std::string> dependencySymbol;
     std::vector<Token> expression;
     std::vector<ForwardReference*> tableForwardReference;

@@ -3,6 +3,7 @@
 #include "../aux/exceptions.hpp"
 #include "../relocation/relocation_entry.hpp"
 #include "../relocation/relocation_table.hpp"
+#include <iostream>
 
 StringTable* SymbolTable::tableOfSymbolString = new StringTable(StringTable::STType::SymbolName);
 std::vector<Symbol*> SymbolTable::table;
@@ -17,6 +18,8 @@ void SymbolTable::addSymbol(const std::string &name, Symbol *newSymbol)
 Symbol *SymbolTable::findSymbol(const std::string &name)
 {
   std::string::size_type findIdx = tableOfSymbolString->findString(name);
+  //std::cout << "Finding symbol: " << std::to_string(findIdx) << std::endl;
+  //std::cout << "Size of table: " << std::to_string(table.size()) << std::endl;
   if(findIdx == std::string::npos)
   {
     return nullptr;
@@ -26,9 +29,11 @@ Symbol *SymbolTable::findSymbol(const std::string &name)
   {
     if(iSymbol->getName() == findIdx)
     {
+
       return iSymbol;
     }
   }
+  return nullptr;
 }
 
 Symbol *SymbolTable::findSymbolInSection(const size_t &sectionIdx, const size_t &offset)
@@ -55,14 +60,14 @@ void SymbolTable::removeSymbolFromTable(const Symbol *tempSymbol)
     it++;
   }
 
-  size_t startName = tempSymbol->getName(), endName;
+  // size_t startName = tempSymbol->getName(), endName;
 
-  std::string namesOfSymbols = tableOfSymbolString->getNames();
+  // std::string namesOfSymbols = tableOfSymbolString->getNames();
 
 
-  for(endName = startName; namesOfSymbols[endName] != '\0'; endName++){}
-  endName++;
-  tableOfSymbolString->removeName(startName, endName);
+  // for(endName = startName; namesOfSymbols[endName] != '\0'; endName++){}
+  // endName++;
+  // tableOfSymbolString->removeName(startName, endName);
 
 }
 

@@ -1,6 +1,7 @@
 #include "macro_table.hpp"
 #include "../aux/exceptions.hpp"
 #include "../assembler.hpp"
+#include <iostream>
 
 std::vector<Macro*> MacroTable::table;
 StringTable* MacroTable::tableOfMacroString = new StringTable(StringTable::STType::MacroName);
@@ -24,6 +25,7 @@ Macro *MacroTable::findMacro(const std::string &name)
 
 void MacroTable::AddMacro(const std::string &name, Macro *newMacro)
 {
+  std::cout << "Macro was added" << std::endl;
   tableOfMacroString->addString(name);
   table.push_back(newMacro);
 }
@@ -116,7 +118,7 @@ std::vector<std::string> MacroTable::getTextRepresentationOfMacros()
   for(auto iMacro : table)
   {
     tempElem = "Name: " + std::to_string(iMacro->getName()) + 
-    ", Value: " + std::to_string(iMacro->getValue());
+    ", Value: " + std::to_string((uint32_t)iMacro->getValue());
     macroTable.push_back(tempElem);
   }
   return macroTable;

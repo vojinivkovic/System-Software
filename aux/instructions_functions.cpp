@@ -809,11 +809,11 @@ static std::vector<uint8_t>transformMemoryDirectStore(const std::vector<Argument
   {
     if(Instructions::resolveSymbol(arguments[1].variable, &operand))
     {
-      if((int)operand < 0)
-      {
-            throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects positive value for memory direct addressing",
-      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
-      }
+      // if((int)operand < 0)
+      // {
+      //       throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects positive value for memory direct addressing",
+      // Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+      // }
       tempInstr = transformLoadInstruction(victimReg, operand);
       instr.insert(instr.end(), tempInstr.begin(), tempInstr.end());
     }
@@ -949,12 +949,12 @@ static std::vector<uint8_t> transformMemoryDirectLoad(const std::vector<Argument
   {
     if(Instructions::resolveSymbol(arguments[0].variable, &operand))
     {
-      if((int)operand < 0)
-      {
-            throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects positive value for memory direct addressing",
-      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+      // if((int)operand < 0)
+      // {
+      //       throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects positive value for memory direct addressing",
+      // Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   
-      }
+      // }
       instr =  transformLoadInstruction(arguments[1].registerNum, operand);
     }
     else
