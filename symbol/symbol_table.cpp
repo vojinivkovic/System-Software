@@ -36,6 +36,10 @@ Symbol *SymbolTable::findSymbol(const std::string &name)
   return nullptr;
 }
 
+void SymbolTable::readSymbolTableInELfFile(const std::string &fileName, std::vector<Symbol *> &symTable, StringTable *&tableOfSymbolString)
+{
+}
+
 Symbol *SymbolTable::findSymbolInSection(const size_t &sectionIdx, const size_t &offset)
 {
   for(auto iSymbol : table)
