@@ -1,5 +1,7 @@
 #include "elf_header.hpp"
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 
 ELFHeader::ELFHeaderType ELFHeader::type;
@@ -91,4 +93,60 @@ std::string ELFHeader::getStringFormat()
   ", Number of Entry for Section of Section Names: " + std::to_string(shstrndx); 
 
   return stringFormat;
+}
+
+static size_t readAndConvertFromLittleEndian(const size_t& startIdx, const std::vector<uint8_t>& bytes)
+{
+  size_t value = 0;
+  for(size_t i = 0; i < sizeof(size_t); i++)
+  {
+    value = (value << 8) | (bytes[startIdx + sizeof(size_t) - 1 - i]);
+  }
+  return value;
+}
+
+void ELFHeader::readElfHeader(const std::string &fileName, ELFHeaderType &tupe, size_t &entry, size_t &phoff, size_t &shoff, size_t &phentsize, size_t &phnum, size_t &shentsize, size_t &shnum, size_t &shstrndx)
+{
+  std::ifstream inputFile(fileName);
+
+  std::vector<uint8_t> bytes;
+  std::string hexByte;
+  size_t currIdx = 0;
+
+  for(size_t i = 0; i < 10 * sizeof(size_t); i++)
+  {
+    inputFile >> hexByte;
+    bytes.push_back(static_cast<uint8_t>(std::stoul(hexByte, nullptr, 16))); 
+  }
+
+  type = (ELFHeaderType)readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  entry = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  phoff = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  shoff = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  phentsize = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  phnum = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  shentsize = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  shnum = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  shstrndx = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
 }

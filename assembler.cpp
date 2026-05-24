@@ -47,7 +47,7 @@ void Assembler::afterFirstPass()
 
 void Assembler::makeELFFiles(const std::string &name)
 {
-  size_t sizeOfFile = 0;
+  size_t sizeOfFile = 10 * sizeof(size_t);
   std::vector<uint8_t> binaryContent;
   std::vector<std::string> textContent;
 

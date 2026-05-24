@@ -28,6 +28,7 @@ public:
     RelaSection
   };
   Section(const std::string& sectionName, const SectionType& type_);
+  Section(const size_t& name_, const Section::SectionType& type_, const size_t& vAddress_, const size_t& offset_, const size_t& size_, const size_t& sizeOfEntry_, const size_t& idx_);
   size_t getLocationCounter() const { return locationCounter;}
   size_t getIdxOfSection() const { return idxSection; }
   void setOffsetInFile(const size_t& offset) { offsetInFile = offset; }
@@ -49,12 +50,13 @@ public:
   void setTextContent (const std::vector<std::string>& textContent_) { textContent = textContent_; }
   void incrementLocationCounter(size_t increment) { locationCounter += increment; }
   static void makeSectionOfSectionNames();
+  static std::vector<Section*> readSectionHeader(const std::string& fileName, const size_t& startOfHeader, const size_t& numOfSections);
   static void makeContentOfSectionsNames();
   std::vector<uint8_t> getLittleEndiandOfSection();
   std::string getTextFormatOfSection();
 
 private:
-  size_t name, locationCounter, idxSection, offsetInFile;
+  size_t name, locationCounter, idxSection, offsetInFile, virtualAddress, sizeOfEntry;
   SectionType type;
   std::vector<uint8_t> content;
   std::vector<std::string> textContent;

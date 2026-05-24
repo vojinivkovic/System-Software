@@ -9,6 +9,7 @@
 #include "aux/string_table.hpp"
 #include <iostream>
 #include <algorithm>
+#include <fstream>
 
 StringTable* Section::tableOfSectionString = new StringTable(StringTable::STType::SectionName);
 
@@ -20,6 +21,9 @@ Section::Section(const std::string& sectionName, const SectionType& type_) : nam
   tableOfSectionString->addString(sectionName);
 }
 
+Section::Section(const size_t &name_, const Section::SectionType &type_, const size_t &vAddress_, const size_t &offset_, const size_t &size_, const size_t &sizeOfEntry_, const size_t &idx_)
+: name(name_), type(type_), virtualAddress(vAddress_), offsetInFile(offset_), locationCounter(size_), sizeOfEntry(sizeOfEntry_), idxSection(idx_)  
+{}
 
 int Section::translateInstruction(const std::string &instruction, const std::vector<Argument> &arguments)
 {
@@ -155,6 +159,65 @@ void Section::insertValueInContent(const uint32_t &value, size_t offset)
 void Section::makeSectionOfSectionNames()
 {
   tableOfSectionString->makeSection(".secstrtab", Section::SectionType::SectionStrTabSection);
+}
+
+static size_t readAndConvertFromLittleEndian(const size_t& startIdx, const std::vector<uint8_t>& bytes)
+{
+  size_t value = 0;
+  for(size_t i = 0; i < sizeof(size_t); i++)
+  {
+    value = (value << 8) | (bytes[startIdx + sizeof(size_t) - 1 - i]);
+  }
+  return value;
+}
+static Section* readSectionFromSectionHeader(std::ifstream& inputFile, const size_t& idx)
+{
+  std::vector<uint8_t> bytes;
+  std::string hexByte;
+  size_t currIdx = 0, name, virtualAddress, offsetInFile, locationCounter, sizeOfEntry;
+  Section::SectionType type;
+
+  for(size_t i = 0; i < 6 * sizeof(size_t); i++)
+  {
+    inputFile >> hexByte;
+    bytes.push_back(static_cast<uint8_t>(std::stoul(hexByte, nullptr, 16))); 
+  }
+
+  name = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  type = (Section::SectionType)readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  virtualAddress = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  offsetInFile= readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  locationCounter = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  sizeOfEntry = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  return new Section(name, type, virtualAddress, offsetInFile, locationCounter, sizeOfEntry, idx);
+}
+std::vector<Section *> Section::readSectionHeader(const std::string &fileName, const size_t &startOfHeader, const size_t& numOfSections)
+{
+  std::vector<Section*> arrayOfSections;
+  size_t offsetInFile, numOfRows = startOfHeader / 4, numOfCol = startOfHeader % 4;
+  std::ifstream inputFile(fileName);
+  offsetInFile = numOfRows * 13 + numOfCol;
+
+  inputFile.seekg(offsetInFile);
+
+  for(size_t i = 0; i < numOfSections; i++)
+  {
+    arrayOfSections.push_back(readSectionFromSectionHeader(inputFile, i));
+  }
+  return arrayOfSections;
+  
 }
 
 void Section::makeContentOfSectionsNames()

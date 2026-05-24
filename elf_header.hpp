@@ -24,6 +24,9 @@ class ELFHeader
 
     static std::vector<uint8_t> getLittleEndianFormat();
     static std::string getStringFormat();
+    static void readElfHeader(const std::string& fileName, ELFHeaderType& tupe, size_t& entry, 
+      size_t& phoff, size_t& shoff, size_t& phentsize,
+    size_t& phnum, size_t& shentsize, size_t& shnum, size_t& shstrndx);
   private:
     static ELFHeaderType type;
     static size_t entry, phoff, shoff, size, phentsize, phnum, shentsize, shnum, shstrndx;

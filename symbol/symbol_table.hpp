@@ -16,6 +16,7 @@ public:
   static size_t getOffsetInTableOfSymbolString() { return tableOfSymbolString->getOffset(); }
   static size_t getNewIdxInSymbolTable() { return table.size(); }
   static Symbol* findSymbol(const std::string& name);
+  static void readSymbolTableInELfFile(const std::string& fileName, std::vector<Symbol*>& symTable, StringTable*& tableOfSymbolString);
   static Symbol* findSymbolInSection(const size_t& sectionIdx, const size_t& offset);
   static void removeSymbolFromTable(const Symbol* tempSymbol);
   static bool checkDefinition(Symbol*& undefinedSymbol);
