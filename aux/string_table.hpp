@@ -17,9 +17,10 @@ public:
   };
 
   StringTable(STType tableType) : type(tableType) {}
+  StringTable(STType tableType, const std::string& content) : type(tableType), tableOfNames(content) {}
   void addString(const std::string& name);
   size_t getOffset() { return tableOfNames.size(); }
-  std::string::size_type findString(const std::string& name);
+  std::string::size_type findString(const std::string& name) const;
   std::string getNames() const { return tableOfNames; }
   void removeName(const size_t& start, const size_t& end) { tableOfNames.erase(start, end-start); }
   std::string getNameOfElement(const size_t& startIdx) const;

@@ -1,5 +1,0 @@
-#ifndef _LINKER_SYMBOL_TABLE_HPP_
-#define _LINKER_SYMBOL_TABLE_HPP_
-
-
-#endif

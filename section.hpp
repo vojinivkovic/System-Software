@@ -32,6 +32,7 @@ public:
   size_t getLocationCounter() const { return locationCounter;}
   size_t getIdxOfSection() const { return idxSection; }
   void setOffsetInFile(const size_t& offset) { offsetInFile = offset; }
+  size_t getOffsetInFile() const { return offsetInFile; }
   int translateInstruction(const std::string& instruction, const std::vector<Argument>& arguments); 
   int executeDirective(const std::string& command, const std::vector<MacroParameter>& parameters);
   void defineSymbol(const std::string& symbolName);
@@ -40,6 +41,7 @@ public:
   static std::string::size_type findSectionInStringTable(const std::string& sectionName);
   size_t getSectionName() const { return name; }
   std::vector<uint8_t> getContent() const { return content; }
+  size_t getSizeOfEntry() const { return sizeOfEntry; }
   void callocMemory(size_t sizeOfAllocation);
   void insertString(const std::string& stringToInsert);
   void insertContent(const uint32_t& value);

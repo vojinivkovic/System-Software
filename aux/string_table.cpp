@@ -8,7 +8,7 @@ void StringTable::addString(const std::string& name)
   tableOfNames.push_back('\0');
 }
 
-std::string::size_type StringTable::findString(const std::string &name)
+std::string::size_type StringTable::findString(const std::string &name) const
 {
   size_t pos = 0;
 

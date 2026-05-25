@@ -59,6 +59,23 @@ public:
 
 
 }
+
+  Symbol(
+         const size_t& name_, 
+         const size_t& size_, 
+         const size_t& value_, 
+         const size_t& section_, 
+         const Binding& bind_, 
+         const Type& type_,
+         const Scope& scope_) 
+         : name(name_),
+           size(size_),
+           value(value_),
+           section(section_),
+           bind(bind_),
+           type(type_),
+           scope(scope_) {}
+
   size_t getName() const { return name; }
   size_t getSize() const { return size; }
   void setSize(size_t size_) { size = size_; }

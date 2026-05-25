@@ -25,6 +25,7 @@ public:
   static void makeSection();
   static void addContentInSection();
   static std::string getNameOfSymbol(const size_t& name);
+  static std::vector<Symbol*> readSymbolsFromElfFile(const std::string& fileName, const Section* symTable);
 
 private:
   static size_t currentSection;

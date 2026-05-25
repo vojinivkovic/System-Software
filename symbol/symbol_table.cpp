@@ -4,6 +4,7 @@
 #include "../relocation/relocation_entry.hpp"
 #include "../relocation/relocation_table.hpp"
 #include <iostream>
+#include <fstream>
 
 StringTable* SymbolTable::tableOfSymbolString = new StringTable(StringTable::STType::SymbolName);
 std::vector<Symbol*> SymbolTable::table;
@@ -160,4 +161,73 @@ void SymbolTable::addContentInSection()
 std::string SymbolTable::getNameOfSymbol(const size_t &name)
 {
   return tableOfSymbolString->getNameOfElement(name);
+}
+
+static size_t readAndConvertFromLittleEndian(const size_t& startIdx, const std::vector<uint8_t>& bytes)
+{
+  size_t value = 0;
+  for(size_t i = 0; i < sizeof(size_t); i++)
+  {
+    value = (value << 8) | (bytes[startIdx + sizeof(size_t) - 1 - i]);
+  }
+  return value;
+}
+
+static Symbol* readSymbolFromTable(std::ifstream& inputFile)
+{
+  std::vector<uint8_t> bytes;
+  std::string hexByte;
+  size_t currIdx = 0, name, size, value, section;
+  Symbol::Binding bind;
+  Symbol::Type type;
+  Symbol::Scope scope;
+ 
+
+  for(size_t i = 0; i < 7 * sizeof(size_t); i++)
+  {
+    inputFile >> hexByte;
+    bytes.push_back(static_cast<uint8_t>(std::stoul(hexByte, nullptr, 16))); 
+  }
+
+  name = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  size = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  value = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  section = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  bind = (Symbol::Binding)readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  type = (Symbol::Type)readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  scope = (Symbol::Scope)readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  return new Symbol(name, size, value, section, bind, type, scope);
+}
+
+
+
+std::vector<Symbol *> SymbolTable::readSymbolsFromElfFile(const std::string &fileName, const Section *symTable)
+{
+  std::vector<Symbol*> arrayOfSymbols;
+  size_t offset = symTable->getOffsetInFile();
+  size_t offsetInFile, numOfRows = offset / 4, numOfCol = offset % 4;
+  std::ifstream inputFile(fileName);
+  offsetInFile = numOfRows * 13 + numOfCol;
+  size_t numOfSymbols = symTable->getLocationCounter() / symTable->getSizeOfEntry();
+
+  inputFile.seekg(offsetInFile);
+  for(size_t i = 0; i < numOfSymbols; i++)
+  {
+    arrayOfSymbols.push_back(readSymbolFromTable(inputFile));
+  }
+  return arrayOfSymbols;
 }

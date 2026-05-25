@@ -4,6 +4,7 @@
 #include <vector>
 #include "aux/string_table.hpp"
 #include "section.hpp"
+#include "symbol/symbol.hpp"
 
 class Linker
 {
@@ -18,6 +19,7 @@ private:
   static std::vector<StringTable*> arrayOfSymbolStringsTables;
   static std::vector<StringTable*> arrayOfSectionStringTables;
   static std::vector<std::vector<Section*>> arrayOfFilesSections;
+  static std::vector<std::vector<Symbol*>> arrayOfSymbolTables;
 
 };
 
