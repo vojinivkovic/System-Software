@@ -5,6 +5,7 @@
 #include "aux/string_table.hpp"
 #include "section.hpp"
 #include "symbol/symbol.hpp"
+#include "aux/exceptions.hpp"
 
 class Linker
 {
@@ -13,6 +14,8 @@ public:
   Linker(const Linker& link) = delete;
   Linker& operator=(const Linker& link) = delete;
   static void readElfFile(const std::string& fileName);
+  static void checkMultipleDefinitions();
+  static void checkUnresolvedSymbols();
 
 private:
 

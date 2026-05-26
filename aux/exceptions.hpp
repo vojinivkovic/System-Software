@@ -13,7 +13,10 @@ enum class ErrorType
   ErrorSymbolAlreadyDefined,
   ErrorInvalidSymbolInMacroExpression,
   ErrorUndefinedSymbol,
-  ErrorUndefinedMacro
+  ErrorUndefinedMacro,
+  ErrorMultipleDefinitions, 
+  ErrorUnresolvedSymbol,
+  ErrorOverlappingSections
 };
 
 class AssemblerErrors : public std::runtime_error
@@ -49,5 +52,25 @@ private:
   std::string detailMessage;
 };
 
+class LinkerErrors : public std::runtime_error
+{
+public:
+  LinkerErrors(ErrorType code, const std::string& msg, const std::string& detail = "") : 
+    std::runtime_error(msg), errorCode(code), detailMessage(detail) {} 
+  
+    std::string toString(ErrorType code) {
+      switch (code) {
+          case ErrorType::ErrorMultipleDefinitions: return "Multiple global definitions of symbol";
+          case ErrorType::ErrorUnresolvedSymbol: return "Unresolved symbol";
+          case ErrorType::ErrorOverlappingSections: return "Sections overlap, place of sections need to changed";
+          default: return "UnknownError";
+      }
+      
+    }
+  private:
+    std::string detailMessage;
+    ErrorType errorCode;
+
+};
 
 #endif
