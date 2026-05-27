@@ -6,6 +6,9 @@
 #include "section.hpp"
 #include "symbol/symbol.hpp"
 #include "aux/exceptions.hpp"
+#include <map>
+#include <utility>
+#include "relocation/relocation_entry.hpp"
 
 class Linker
 {
@@ -16,6 +19,8 @@ public:
   static void readElfFile(const std::string& fileName);
   static void checkMultipleDefinitions();
   static void checkUnresolvedSymbols();
+  static void makeLinkerSections();
+
 
 private:
 
@@ -23,7 +28,13 @@ private:
   static std::vector<StringTable*> arrayOfSectionStringTables;
   static std::vector<std::vector<Section*>> arrayOfFilesSections;
   static std::vector<std::vector<Symbol*>> arrayOfSymbolTables;
-
+  static std::vector<Section*> linkerSections;
+  static std::vector<Symbol*> linkerSymbols;
+  static std::vector<std::string> files;
+  static std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>> mappingFileSectionToSectionOffset;
+  static StringTable* sectionStringTable;
+  static StringTable* symbolStringTable;
+  static std::vector<std::vector<RelocationEntry*>> arrayOfRelocationEntryTables;
 };
 
 #endif

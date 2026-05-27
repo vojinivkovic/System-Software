@@ -156,6 +156,12 @@ void Section::insertValueInContent(const uint32_t &value, size_t offset)
   }
 }
 
+void Section::addContent(const std::vector<uint8_t>& newContent)
+{
+  content.insert(content.end(), newContent.begin(), newContent.end());
+  locationCounter += newContent.size();
+} 
+
 void Section::makeSectionOfSectionNames()
 {
   tableOfSectionString->makeSection(".secstrtab", Section::SectionType::SectionStrTabSection);

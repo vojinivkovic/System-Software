@@ -4,6 +4,18 @@
 #include <iostream>
 #include <fstream>
 
+std::vector<StringTable*> Linker::arrayOfSymbolStringsTables;
+std::vector<StringTable*> Linker::arrayOfSectionStringTables;
+std::vector<std::vector<Section*>> Linker::arrayOfFilesSections;
+std::vector<std::vector<Symbol*>> Linker::arrayOfSymbolTables;
+std::vector<std::vector<RelocationEntry*>> Linker::arrayOfRelocationEntryTables;
+std::vector<Section*> Linker::linkerSections;
+std::vector<Symbol*> Linker::linkerSymbols;
+std::vector<std::string> Linker::files;
+std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>> Linker::mappingFileSectionToSectionOffset;
+StringTable* Linker::sectionStringTable = new StringTable(StringTable::STType::SectionName);
+StringTable* Linker::symbolStringTable = new StringTable(StringTable::STType::SymbolName);;
+
 static StringTable* readSectionStringTable(const std::string& fileName, const Section* sectionStringTable, const StringTable::STType& type)
 {
   std::ifstream inputFile(fileName);
@@ -58,7 +70,7 @@ void Linker::readElfFile(const std::string &fileName)
   std::vector<Section*> tableOfSections;
   std::vector<Symbol*> tableOfSymbols;
   StringTable* tempSectionStringTable, *tempSymbolStringTable;
-  Section* symbolTable, *symbolStringTable;
+  Section* symbolTable, *symbolStringTable, *relocationTable;
 
   ELFHeader::readElfHeader(fileName, elfType, entry, phoff, shoff, phentsize, phnum, shentsize, shnum, shstrndx);
   tableOfSections = Section::readSectionHeader(fileName, shoff, shnum);
@@ -170,5 +182,85 @@ void Linker::checkUnresolvedSymbols()
       }
       
     }
+  }
+}
+std::vector<uint8_t> getContentOfSection(const std::string& fileName, const size_t& offset, const size_t& size)
+{
+  size_t offsetInFile, numOfRows = offset / 4, numOfCol = offset % 4;
+  std::ifstream inputFile(fileName);
+  offsetInFile = numOfRows * 13  + numOfCol;
+  inputFile.seekg(offsetInFile);
+  std::string hexByte;
+  std::vector<uint8_t> content;
+
+  for(size_t i = 0; i < size; i++)
+  {
+    inputFile >> hexByte;
+    content.push_back(static_cast<uint8_t>(std::stoul(hexByte, nullptr, 16)));
+  }
+  return content;
+}
+static size_t findSection(const size_t& name, std::vector<Section*> arrayOfSections)
+{
+  for(size_t i = 0; i < arrayOfSections.size(); i++)
+  {
+    if(arrayOfSections[i]->getSectionName() == name)
+    {
+      return i;
+    }
+  }
+}
+void Linker::makeLinkerSections()
+{
+  std::vector<Section*> tempSections;
+  StringTable* sectionStringTable; 
+  std::vector<uint8_t> tempContent;
+  std::string tempSectionName;
+  size_t newSectionName;
+  Section* newSection, *oldSection;
+  Symbol* newSymbol;
+  size_t idxSection;
+
+  for(size_t i = 0; i < arrayOfFilesSections.size(); i++)
+  {
+    tempSections = arrayOfFilesSections[i];
+    sectionStringTable = arrayOfSectionStringTables[i];
+
+    for(int j = 0; j < tempSections.size(); j++)
+    {
+      tempContent = getContentOfSection(files[i], tempSections[j]->getOffsetInFile(), tempSections[j]->getLocationCounter());
+
+      tempSectionName = sectionStringTable->getNameOfElement(tempSections[j]->getSectionName());
+      newSectionName = sectionStringTable->findString(tempSectionName);
+
+      if(!tempContent.size() || tempSectionName == ".rela" || 
+      tempSectionName == ".symtable" || tempSectionName == ".symstrtab" 
+      || tempSectionName == ".secstrtab")
+      {
+        continue;
+      }
+      if(!newSectionName)
+      {
+        
+        newSection = new Section(sectionStringTable->getOffset(), tempSections[j]->getSectionType(), 0, 0, tempSections[j]->getLocationCounter(), tempSections[j]->getSizeOfEntry(), linkerSections.size());
+        newSection->setContent(tempContent);
+        mappingFileSectionToSectionOffset[{i, j}] = {linkerSections.size(), 0};
+
+        Symbol* newSymbol = new Symbol(linkerSymbols.size(), symbolStringTable->getOffset(), 0, 0, linkerSections.size(), Symbol::Binding::NoBinding, Symbol::Type::Section, Symbol::Scope::NoScope, true);
+        symbolStringTable->addString(tempSectionName);
+        linkerSymbols.push_back(newSymbol);
+
+        sectionStringTable->addString(tempSectionName);
+        linkerSections.push_back(newSection);      
+      }
+      else
+      {
+        idxSection = findSection(newSectionName, linkerSections);
+        oldSection = linkerSections[idxSection];
+        mappingFileSectionToSectionOffset[{i, j}] = {idxSection, oldSection->getLocationCounter()};
+        oldSection->addContent(tempContent);
+      }
+    }
+
   }
 }

@@ -31,6 +31,7 @@ public:
   Section(const size_t& name_, const Section::SectionType& type_, const size_t& vAddress_, const size_t& offset_, const size_t& size_, const size_t& sizeOfEntry_, const size_t& idx_);
   size_t getLocationCounter() const { return locationCounter;}
   size_t getIdxOfSection() const { return idxSection; }
+  SectionType getSectionType() const { return type; }
   void setOffsetInFile(const size_t& offset) { offsetInFile = offset; }
   size_t getOffsetInFile() const { return offsetInFile; }
   int translateInstruction(const std::string& instruction, const std::vector<Argument>& arguments); 
@@ -49,6 +50,7 @@ public:
   static StringTable* getTableOfSectionStrings() { return tableOfSectionString; }
   std::vector<std::string> getTextContent() const { return textContent; }
   void setContent (const std::vector<uint8_t>& content_) { content = content_; }
+  void addContent(const std::vector<uint8_t>& newContent);
   void setTextContent (const std::vector<std::string>& textContent_) { textContent = textContent_; }
   void incrementLocationCounter(size_t increment) { locationCounter += increment; }
   static void makeSectionOfSectionNames();
