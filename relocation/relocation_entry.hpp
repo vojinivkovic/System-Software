@@ -16,6 +16,7 @@ public:
   offset(offset_), idxSection(idxSection_), idxSymbol(idxSymbol_), addend(addend_), typeOfRelocations(type_) {}
   size_t getIdxSymbol() const { return idxSymbol;}
   void setIdxSymbol(size_t idx) { idxSymbol = idx; }
+  void setOffset(size_t offset_) { offset = offset_; }
   void setAddend(size_t newAddend) { addend = newAddend; } 
   size_t getOffset() const { return offset;}
   size_t getIdxSection() const { return idxSection; }

@@ -35,6 +35,7 @@ private:
   static StringTable* sectionStringTable;
   static StringTable* symbolStringTable;
   static std::vector<std::vector<RelocationEntry*>> arrayOfRelocationEntryTables;
+  static void adjustOffset();
 };
 
 #endif

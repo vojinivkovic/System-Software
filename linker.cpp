@@ -3,6 +3,8 @@
 #include "section.hpp"
 #include <iostream>
 #include <fstream>
+#include "relocation/relocation_table.hpp"
+#include <algorithm>
 
 std::vector<StringTable*> Linker::arrayOfSymbolStringsTables;
 std::vector<StringTable*> Linker::arrayOfSectionStringTables;
@@ -62,13 +64,26 @@ static void findSymbolTables(Section*& symbolStringTable, Section*& symbolTable,
     }
   }
 }
+static void findRelocationTableSection(const StringTable* sectionStringTable, const std::vector<Section*>& sections, Section*& relocationTableSection)
+{
+  size_t nameRelocationTable = sectionStringTable->findString(".rela");
 
+  for(auto iSection : sections)
+  {
+    if(iSection->getSectionName() == nameRelocationTable)
+    {
+      relocationTableSection = iSection;
+      break;
+    }
+  }
+}
 void Linker::readElfFile(const std::string &fileName)
 {
   ELFHeader::ELFHeaderType elfType; 
   size_t entry, phoff, shoff, phentsize, phnum, shentsize, shnum, shstrndx;
   std::vector<Section*> tableOfSections;
   std::vector<Symbol*> tableOfSymbols;
+  std::vector<RelocationEntry*> tableOfRelocationTables;
   StringTable* tempSectionStringTable, *tempSymbolStringTable;
   Section* symbolTable, *symbolStringTable, *relocationTable;
 
@@ -77,10 +92,14 @@ void Linker::readElfFile(const std::string &fileName)
   tempSectionStringTable = readSectionStringTable(fileName, tableOfSections[shstrndx], StringTable::STType::SectionName);
 
   findSymbolTables(symbolStringTable, symbolTable, tempSectionStringTable, tableOfSections);
+  findRelocationTableSection(tempSectionStringTable, tableOfSections, relocationTable);
 
   tempSymbolStringTable = readSectionStringTable(fileName, symbolStringTable, StringTable::STType::SymbolName);
 
   tableOfSymbols = SymbolTable::readSymbolsFromElfFile(fileName, symbolTable);
+  tableOfRelocationTables = RelocationTable::readRelocationTableFromElfFile(fileName, relocationTable);
+
+  //SORT RELOCATION ENTRIES BASED ON OFFSET
 }
 
 static void checkDefinitionOfTheSymbolInSymbolTable(const Symbol* sym, const std::string& symbolName, 
@@ -262,5 +281,48 @@ void Linker::makeLinkerSections()
       }
     }
 
+  }
+}
+static void fixRelocationTable(std::vector<std::vector<RelocationEntry*>>& array, const size_t& numOfTable, const size_t& numOfEntry)
+{
+  for(size_t i = numOfEntry + 1; i < array[numOfTable].size(); i++)
+  {
+    array[numOfTable][i]->setOffset(array[numOfTable][i]->getOffset() + 40);
+  }
+}
+
+static void addOffsetToSections(std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>>& map, 
+  const size_t& idxFile, const size_t& idxSection)
+{
+  std::pair<size_t, size_t> sectionAndOffset = map[{idxFile, idxSection}];
+  for(auto& entry : map)
+  {
+      const std::pair<size_t, size_t>& key = entry.first;
+      const std::pair<size_t, size_t>& value = entry.second;
+      if(value.first == sectionAndOffset.first && value.second > sectionAndOffset.second)
+      {
+        map[key] = {value.first, value.second + 40};
+      }
+  }
+}
+
+void Linker::adjustOffset()
+{
+  std::vector<RelocationEntry*> tempRelocationTable;
+  for(size_t i = 0; i < arrayOfRelocationEntryTables.size(); i++)
+  {
+    tempRelocationTable = arrayOfRelocationEntryTables[i];
+    // std::sort(tempRelocationTable.begin(), tempRelocationTable.end(),
+    // [](const RelocationEntry* a, const RelocationEntry* b)
+    // {
+    //     return a->getOffset() < b->getOffset();
+    // }
+    //);
+
+    for(size_t j = 0; j < tempRelocationTable.size(); j++)
+    {
+      fixRelocationTable(arrayOfRelocationEntryTables, i, j);
+      addOffsetToSections(mappingFileSectionToSectionOffset, i, tempRelocationTable[j]->getIdxSection());
+    }
   }
 }

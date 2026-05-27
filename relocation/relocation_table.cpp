@@ -1,6 +1,8 @@
 #include "relocation_table.hpp"
 #include "../section.hpp"
 #include "../assembler.hpp"
+#include <iostream>
+#include <fstream>
 
 std::vector<RelocationEntry*> RelocationTable::table;
 
@@ -32,4 +34,57 @@ void RelocationTable::makeSection()
   newSection->setContent(content);
   newSection->setTextContent(textContent);
   Assembler::addSection(newSection);
+}
+static size_t readAndConvertFromLittleEndian(const size_t& startIdx, const std::vector<uint8_t>& bytes)
+{
+  size_t value = 0;
+  for(size_t i = 0; i < sizeof(size_t); i++)
+  {
+    value = (value << 8) | (bytes[startIdx + sizeof(size_t) - 1 - i]);
+  }
+  return value;
+}
+
+static RelocationEntry* readRelocationEntryFromTable(std::ifstream& inputFile)
+{
+  std::vector<uint8_t> bytes;
+  std::string hexByte;
+  size_t currIdx = 0, offset, idxSection, idxSymbol, addend;
+
+  for(size_t i = 0; i < 4 * sizeof(size_t); i++)
+  {
+    inputFile >> hexByte;
+    bytes.push_back(static_cast<uint8_t>(std::stoul(hexByte, nullptr, 16))); 
+  }
+
+  offset = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  idxSection = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  idxSymbol = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  addend = readAndConvertFromLittleEndian(currIdx, bytes);
+  currIdx += sizeof(size_t);
+
+  return new RelocationEntry(offset, idxSection, idxSymbol, addend);
+}
+std::vector<RelocationEntry *> RelocationTable::readRelocationTableFromElfFile(const std::string &fileName, const Section *relaTable)
+{
+  std::vector<RelocationEntry*> arrayOfRelocationEntries;
+  size_t offset = relaTable->getOffsetInFile();
+  size_t offsetInFile, numOfRows = offset / 4, numOfCol = offset % 4;
+  std::ifstream inputFile(fileName);
+  offsetInFile = numOfRows * 13 + numOfCol;
+
+  size_t numOfRelocationEntries = relaTable->getLocationCounter() / relaTable->getSizeOfEntry();
+
+  inputFile.seekg(offsetInFile);
+  for(size_t i = 0; i < numOfRelocationEntries; i++)
+  {
+    arrayOfRelocationEntries.push_back(readRelocationEntryFromTable(inputFile));
+  }
+  return arrayOfRelocationEntries;
 }
