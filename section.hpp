@@ -31,6 +31,7 @@ public:
   Section(const size_t& name_, const Section::SectionType& type_, const size_t& vAddress_, const size_t& offset_, const size_t& size_, const size_t& sizeOfEntry_, const size_t& idx_);
   size_t getLocationCounter() const { return locationCounter;}
   size_t getIdxOfSection() const { return idxSection; }
+  size_t getVirtualAddress() const { return virtualAddress; }
   SectionType getSectionType() const { return type; }
   void setOffsetInFile(const size_t& offset) { offsetInFile = offset; }
   size_t getOffsetInFile() const { return offsetInFile; }

@@ -20,6 +20,7 @@ public:
   static void checkMultipleDefinitions();
   static void checkUnresolvedSymbols();
   static void makeLinkerSections();
+  static void fixRelocationEntries();
 
 
 private:
@@ -36,6 +37,7 @@ private:
   static StringTable* symbolStringTable;
   static std::vector<std::vector<RelocationEntry*>> arrayOfRelocationEntryTables;
   static void adjustOffset();
+  static size_t findValueOfSymbol(const size_t& currentFile, const std::string& symbolName);
 };
 
 #endif

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include "relocation/relocation_table.hpp"
+#include "aux/instructions_functions.hpp"
 #include <algorithm>
 
 std::vector<StringTable*> Linker::arrayOfSymbolStringsTables;
@@ -100,6 +101,14 @@ void Linker::readElfFile(const std::string &fileName)
   tableOfRelocationTables = RelocationTable::readRelocationTableFromElfFile(fileName, relocationTable);
 
   //SORT RELOCATION ENTRIES BASED ON OFFSET
+    std::sort(tableOfRelocationTables.begin(), tableOfRelocationTables.end(),
+    [](const RelocationEntry* a, const RelocationEntry* b)
+    {
+        return a->getOffset() < b->getOffset();
+    }
+    );
+
+
 }
 
 static void checkDefinitionOfTheSymbolInSymbolTable(const Symbol* sym, const std::string& symbolName, 
@@ -283,14 +292,85 @@ void Linker::makeLinkerSections()
 
   }
 }
-static void fixRelocationTable(std::vector<std::vector<RelocationEntry*>>& array, const size_t& numOfTable, const size_t& numOfEntry)
+
+void Linker::fixRelocationEntries()
+{
+  std::vector<RelocationEntry*> tempRelocationTable;
+  std::vector<Symbol*> tempSymbolTable;
+  std::vector<Section*> tempSectionTable;
+  StringTable* tempSymbolStringTable, *tempSectionStringTable;
+  Symbol* tempSymbol;
+  Section* tempSection, *newSection;
+  
+  for(int i = 0; i < arrayOfRelocationEntryTables.size(); i++)
+  {
+    tempRelocationTable = arrayOfRelocationEntryTables[i];
+    tempSymbolTable = arrayOfSymbolTables[i];
+    tempSectionTable = arrayOfFilesSections[i];
+    tempSymbolStringTable = arrayOfSymbolStringsTables[i];
+    tempSectionStringTable = arrayOfSectionStringTables[i];
+
+    for(int j = 0; j < tempRelocationTable.size(); j++)
+    {
+      tempSymbol = tempSymbolTable[tempRelocationTable[j]->getIdxSymbol()];
+      tempSection = tempSectionTable[tempRelocationTable[j]->getIdxSection()];
+
+      std::pair<size_t, size_t> sectionAndOffset = mappingFileSectionToSectionOffset[{i, tempSection->getIdxOfSection()}];
+      size_t startOffset = sectionAndOffset.second;
+      size_t offsetOfRelocation = startOffset + tempRelocationTable[j]->getOffset();
+      newSection = linkerSections[sectionAndOffset.first];
+      std::vector<uint8_t> tempContent = newSection->getContent();
+      
+      uint8_t destReg = tempContent[offsetOfRelocation + 2];
+      destReg >>= 4;
+      size_t value;
+      
+
+      if(tempSymbol->getDefined())
+      {
+
+        std::pair<size_t, size_t> symbolSectionAndOffset = mappingFileSectionToSectionOffset[{i, tempSymbol->getSection()}];
+        Section* newSymbolSection = linkerSections[symbolSectionAndOffset.first];
+        value = newSymbolSection->getVirtualAddress() + symbolSectionAndOffset.second + tempSymbol->getValue();
+
+        std::vector<uint8_t> newContent = transformLoadInstruction(destReg, value);
+
+        tempContent.erase(tempContent.begin() + offsetOfRelocation, tempContent.begin() + offsetOfRelocation + 4);
+        tempContent.insert(tempContent.begin() + offsetOfRelocation, newContent.begin(), newContent.end());
+        newSection->setContent(tempContent);
+
+      }
+      else
+      {
+        std::string symbolName = tempSymbolStringTable->getNameOfElement(tempSymbol->getName());
+        value = findValueOfSymbol(i, symbolName);
+        std::vector<uint8_t> newContent = transformLoadInstruction(destReg, value);
+
+        tempContent.erase(tempContent.begin() + offsetOfRelocation, tempContent.begin() + offsetOfRelocation + 4);
+        tempContent.insert(tempContent.begin() + offsetOfRelocation, newContent.begin(), newContent.end());
+        newSection->setContent(tempContent);
+      }
+
+    }
+  }
+}
+static void fixRelocationTable(std::vector<std::vector<RelocationEntry *>> &array, const size_t &numOfTable, const size_t &numOfEntry)
 {
   for(size_t i = numOfEntry + 1; i < array[numOfTable].size(); i++)
   {
     array[numOfTable][i]->setOffset(array[numOfTable][i]->getOffset() + 40);
   }
 }
-
+static void fixSymbolTable(std::vector<std::vector<Symbol*>>& array, const size_t& numOfTable, const size_t& offset, const size_t& idxSection)
+{
+  for(size_t i = 0; i < array[numOfTable].size(); i++)
+  {
+    if(array[numOfTable][i]->getSection() == idxSection && array[numOfTable][i]->getValue() > offset)
+    {
+      array[numOfTable][i]->setValue(array[numOfTable][i]->getValue() + 40);
+    }
+  }
+}
 static void addOffsetToSections(std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>>& map, 
   const size_t& idxFile, const size_t& idxSection)
 {
@@ -312,17 +392,56 @@ void Linker::adjustOffset()
   for(size_t i = 0; i < arrayOfRelocationEntryTables.size(); i++)
   {
     tempRelocationTable = arrayOfRelocationEntryTables[i];
-    // std::sort(tempRelocationTable.begin(), tempRelocationTable.end(),
-    // [](const RelocationEntry* a, const RelocationEntry* b)
-    // {
-    //     return a->getOffset() < b->getOffset();
-    // }
-    //);
 
     for(size_t j = 0; j < tempRelocationTable.size(); j++)
     {
       fixRelocationTable(arrayOfRelocationEntryTables, i, j);
       addOffsetToSections(mappingFileSectionToSectionOffset, i, tempRelocationTable[j]->getIdxSection());
+      fixSymbolTable(arrayOfSymbolTables, i, tempRelocationTable[j]->getOffset(), tempRelocationTable[j]->getIdxSection());
     }
+  }
+}
+
+static Symbol* findSymbolInSection(const std::vector<Symbol*>& symTable, const size_t& symName)
+{
+  for(size_t i = 0; i < symTable.size(); i++)
+  {
+    if(symTable[i]->getName() == symName)
+    {
+      return symTable[i];
+    }
+  }
+}
+size_t Linker::findValueOfSymbol(const size_t &currentFile, const std::string &symbolName)
+{
+  std::vector<Symbol*> tempSymbolTable;
+  StringTable* tempSymbolStringTable;
+  Symbol* tempSymbol;
+  for(size_t i = 0; i < arrayOfSymbolTables.size(); i++)
+  {
+    if(i == currentFile)
+    {
+      continue;
+    }
+    tempSymbolTable = arrayOfSymbolTables[i];
+    tempSymbolStringTable = arrayOfSymbolStringsTables[i];
+
+    size_t nameOfSymbol = tempSymbolStringTable->findString(symbolName);
+    if(nameOfSymbol)
+    {
+      tempSymbol = findSymbolInSection(tempSymbolTable, nameOfSymbol);
+      if(tempSymbol->getDefined() && tempSymbol->getBinding() == Symbol::Binding::Export && tempSymbol->getScope() == Symbol::Scope::Global)
+      {
+        size_t value;
+        std::pair<size_t, size_t> symbolSectionAndOffset = mappingFileSectionToSectionOffset[{i, tempSymbol->getSection()}];
+        Section* newSymbolSection = linkerSections[symbolSectionAndOffset.first];
+        value = newSymbolSection->getVirtualAddress() + symbolSectionAndOffset.second + tempSymbol->getValue();
+        return value;
+      }
+    }
+    // else
+    // {
+    //   continue;
+    // }
   }
 }
