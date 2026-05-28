@@ -21,7 +21,7 @@ Section::Section(const std::string& sectionName, const SectionType& type_) : nam
   tableOfSectionString->addString(sectionName);
 }
 
-Section::Section(const size_t &name_, const Section::SectionType &type_, const size_t &vAddress_, const size_t &offset_, const size_t &size_, const size_t &sizeOfEntry_, const size_t &idx_)
+Section::Section(const size_t &name_, const Section::SectionType &type_, const uint32_t &vAddress_, const size_t &offset_, const size_t &size_, const size_t &sizeOfEntry_, const size_t &idx_)
 : name(name_), type(type_), virtualAddress(vAddress_), offsetInFile(offset_), locationCounter(size_), sizeOfEntry(sizeOfEntry_), idxSection(idx_)  
 {}
 
@@ -99,7 +99,7 @@ void Section::defineSymbol(const std::string &symbolName)
     Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, locationCounter, idxSection, Symbol::Binding::NoBinding, Symbol::Type::Object, Symbol::Scope::Local, true);
     SymbolTable::addSymbol(symbolName, newSymbol);
   }
-  MacroTable::tryToResolveAllMacros(std::vector<std::string>{symbolName}, true);
+  MacroTable::tryToResolveAllMacros(std::vector<std::string>{symbolName});
 }
 
 std::string::size_type Section::findSectionInStringTable(const std::string &sectionName)

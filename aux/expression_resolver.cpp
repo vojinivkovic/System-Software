@@ -1,7 +1,11 @@
 #include "expression_resolver.hpp"
 #include "../macro/macro.hpp"
 #include "../macro/macro_table.hpp"
+#include "../symbol/symbol.hpp"
+#include "../symbol/symbol_table.hpp"
+#include "exceptions.hpp"
 #include <iostream>
+#include "../assembler.hpp"
 
 std::stack<Token> ExpressionResolver::auxStack;
 std::vector<Token> ExpressionResolver::postfixExpression;
@@ -75,7 +79,8 @@ std::int32_t ExpressionResolver::evaluate()
 {
   Token operand1, operand2;
   std::int64_t operand1Value, operand2Value;
-  Macro* tempMacro;
+  Macro* tempMacro, *tempMacroOperand1, *tempMacroOperand2;
+  Symbol* tempSymbol, *tempSymbolOperand1, *tempSymbolOperand2;
   for(size_t i = 0; i < postfixExpression.size(); i++)
   {
     if(postfixExpression[i].type == TokenType::LITERAL || postfixExpression[i].type == TokenType::SYMBOL)
@@ -93,6 +98,13 @@ std::int32_t ExpressionResolver::evaluate()
       else
       {
         tempMacro = MacroTable::findMacro(operand1.symbol);
+        tempSymbol = SymbolTable::findSymbol(operand1.symbol);
+        if(tempSymbol)
+        {
+          throw AssemblerErrors(ErrorType::ErrorInvalidSymbolInMacroExpression, "Macro can't have symbol that is not macro for unary operations",
+            Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+ 
+        }
         operand1Value = tempMacro->getValue();
 
       }
@@ -120,8 +132,9 @@ std::int32_t ExpressionResolver::evaluate()
       }
       else
       {
-        tempMacro = MacroTable::findMacro(operand1.symbol);
-        operand1Value = tempMacro->getValue();
+        tempMacroOperand1 = MacroTable::findMacro(operand1.symbol);
+        tempSymbolOperand1 = SymbolTable::findSymbol(operand1.symbol);
+        //operand1Value = tempMacro->getValue();
 
       }
 
@@ -131,17 +144,51 @@ std::int32_t ExpressionResolver::evaluate()
       }
       else
       {
-        tempMacro = MacroTable::findMacro(operand2.symbol);
-        operand2Value = tempMacro->getValue();
+        tempMacroOperand2 = MacroTable::findMacro(operand2.symbol);
+        tempSymbolOperand2 = SymbolTable::findSymbol(operand1.symbol);
+        //operand2Value = tempMacro->getValue();
 
       }
       switch (postfixExpression[i].type)
       {
         case TokenType::BINPLUS:
+          if(tempSymbolOperand1 || tempSymbolOperand2)
+          {
+            throw AssemblerErrors(ErrorType::ErrorInvalidSymbolInMacroExpression, "Macro can't have (pure)symbols in addition",
+              Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+ 
+          }
+          operand1Value = tempMacroOperand1->getValue();
+          operand2Value = tempMacroOperand2->getValue();
           auxStack.push((Token){TokenType::LITERAL, operand1Value + operand2Value, ""});
           break;
         
         case TokenType::BINMINUS:
+          if(tempSymbolOperand1 && tempSymbolOperand2)
+          {
+            if(tempSymbolOperand1->getSection() == tempSymbolOperand2->getSection())
+            {
+              operand1Value = tempSymbolOperand1->getValue();
+              operand2Value = tempSymbolOperand2->getValue();
+            }
+            else
+            {
+              throw AssemblerErrors(ErrorType::ErrorInvalidSymbolInMacroExpression, "Macro can't have one symbols from different sections in subtraction",
+              Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+ 
+            }
+          }
+          else if(tempSymbolOperand1 || tempSymbolOperand2)
+          {
+            throw AssemblerErrors(ErrorType::ErrorInvalidSymbolInMacroExpression, "Macro can't have one (pure)symbol in subtraction",
+              Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+ 
+          }
+          else
+          {
+            operand1Value = tempMacroOperand1->getValue();
+            operand2Value = tempMacroOperand2->getValue();
+          }
           auxStack.push((Token){TokenType::LITERAL, operand1Value - operand2Value, ""});
           break; 
       }

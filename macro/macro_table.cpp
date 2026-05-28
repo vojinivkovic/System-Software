@@ -30,22 +30,15 @@ void MacroTable::AddMacro(const std::string &name, Macro *newMacro)
   table.push_back(newMacro);
 }
 
-void MacroTable::tryToResolveAllMacros(const std::vector<std::string>& definedSymbols, bool pureSymbol)
+void MacroTable::tryToResolveAllMacros(const std::vector<std::string>& definedSymbols)
 {
   std::vector<std::string> newDefinedSymbols;
-  bool ifContains;
   for(auto iMacro : table)
   {
     if(!iMacro->getDefined())
     {
-      if(iMacro->checkForResolving(definedSymbols, &ifContains))
+      if(iMacro->checkForResolving(definedSymbols))
       {
-        if(pureSymbol && ifContains)
-        {
-          throw AssemblerErrors(ErrorType::ErrorInvalidSymbolInMacroExpression, "Macro can't symbol that is not macro",
-            Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
- 
-        }
         iMacro->resolveMacro();
         newDefinedSymbols.push_back(MacroTable::getNameOfMacro(iMacro->getName()));
       }
@@ -53,7 +46,7 @@ void MacroTable::tryToResolveAllMacros(const std::vector<std::string>& definedSy
   }
   if(!newDefinedSymbols.empty())
   {
-    tryToResolveAllMacros(newDefinedSymbols, false);
+    tryToResolveAllMacros(newDefinedSymbols);
   }
 }
 

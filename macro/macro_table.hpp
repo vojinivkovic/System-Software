@@ -14,7 +14,7 @@ public:
   static size_t getOffsetInTableOfMacroString() { return tableOfMacroString->getOffset(); }
   static Macro* findMacro(const std::string& name);
   static void AddMacro(const std::string& name, Macro* newMacro);
-  static void tryToResolveAllMacros(const std::vector<std::string>& definedSymbols, bool pureSymbol);
+  static void tryToResolveAllMacros(const std::vector<std::string>& definedSymbols);
   static std::string getNameOfMacro(size_t name);
   static bool checkDefinition(Macro*& undefinedMacro);
   static void resolveForwardReference();

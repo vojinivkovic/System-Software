@@ -20,7 +20,7 @@ class Macro
     std::int32_t getValue() const {return value; }
     void addForwardReference(ForwardReference* newReference) { tableForwardReference.push_back(newReference); }
     std::vector<ForwardReference*> getForwardReference() const { return tableForwardReference; }
-    bool checkForResolving(std::vector<std::string> definedSymbols, bool* ifContains);
+    bool checkForResolving(std::vector<std::string> definedSymbols);
     void resolveMacro();
 
     private:

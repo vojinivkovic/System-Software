@@ -42,11 +42,11 @@ Macro::Macro(const size_t& name_, const std::vector<Token>& expression_,
   else
   {
     this->resolveMacro();
-    MacroTable::tryToResolveAllMacros(std::vector<std::string>{MacroTable::getNameOfMacro(name)}, false);
+    MacroTable::tryToResolveAllMacros(std::vector<std::string>{MacroTable::getNameOfMacro(name)});
   }
 }
 
-bool Macro::checkForResolving(std::vector<std::string> definedSymbols, bool* ifContains)
+bool Macro::checkForResolving(std::vector<std::string> definedSymbols)
 {
 
   for(auto itDefinedSymbols : definedSymbols)
@@ -55,7 +55,6 @@ bool Macro::checkForResolving(std::vector<std::string> definedSymbols, bool* ifC
     {
       if(itDefinedSymbols == (*itDependencySymbols))
       {
-        *ifContains = true;
         dependencySymbol.erase(itDependencySymbols);
         break;
       }

@@ -18,6 +18,7 @@ std::vector<std::string> Linker::files;
 std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>> Linker::mappingFileSectionToSectionOffset;
 StringTable* Linker::sectionStringTable = new StringTable(StringTable::STType::SectionName);
 StringTable* Linker::symbolStringTable = new StringTable(StringTable::STType::SymbolName);;
+std::unordered_map<std::string, uint32_t> Linker::placeMapping;
 
 static StringTable* readSectionStringTable(const std::string& fileName, const Section* sectionStringTable, const StringTable::STType& type)
 {
@@ -349,11 +350,26 @@ void Linker::fixRelocationEntries()
         tempContent.erase(tempContent.begin() + offsetOfRelocation, tempContent.begin() + offsetOfRelocation + 4);
         tempContent.insert(tempContent.begin() + offsetOfRelocation, newContent.begin(), newContent.end());
         newSection->setContent(tempContent);
+
       }
 
     }
   }
 }
+
+void Linker::makeLinkerSymbolTable()
+{
+}
+
+void Linker::makeLinkerRelocationEntries()
+{
+}
+
+void Linker::addSectionMapping(const std::string &secionName, const uint32_t &memAddress)
+{
+  placeMapping[secionName] = memAddress;
+}
+
 static void fixRelocationTable(std::vector<std::vector<RelocationEntry *>> &array, const size_t &numOfTable, const size_t &numOfEntry)
 {
   for(size_t i = numOfEntry + 1; i < array[numOfTable].size(); i++)
@@ -371,8 +387,41 @@ static void fixSymbolTable(std::vector<std::vector<Symbol*>>& array, const size_
     }
   }
 }
-static void addOffsetToSections(std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>>& map, 
-  const size_t& idxFile, const size_t& idxSection)
+
+void Linker::fixVirtualAddressOfSections()
+{
+  uint32_t currentVirtualAddress = 0, newVirtualAddress;
+  Section* tempSection;
+  std::string sectionName;
+
+  for(size_t i = 0; i < linkerSections.size(); i++)
+  {
+    tempSection = linkerSections[i];
+    sectionName = sectionStringTable->getNameOfElement(tempSection->getSectionName());
+
+    auto it = placeMapping.find(sectionName);
+
+    if(it != placeMapping.end())
+    {
+      newVirtualAddress = it->second;
+      if(currentVirtualAddress > newVirtualAddress)
+      {
+        throw LinkerErrors(ErrorType::ErrorOverlappingSections, "Section [" + sectionName + "] can't be placed ad define address");
+      }
+      tempSection->setVirtualAddress(newVirtualAddress);
+      currentVirtualAddress = newVirtualAddress;
+    }
+    else
+    {
+      tempSection->setVirtualAddress(currentVirtualAddress);
+    }
+    currentVirtualAddress += tempSection->getLocationCounter();
+
+  }
+}
+
+void Linker::addOffsetToSections(std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>> &map,
+                                 const size_t &idxFile, const size_t &idxSection)
 {
   std::pair<size_t, size_t> sectionAndOffset = map[{idxFile, idxSection}];
   for(auto& entry : map)
@@ -382,6 +431,8 @@ static void addOffsetToSections(std::map<std::pair<size_t, size_t>, std::pair<si
       if(value.first == sectionAndOffset.first && value.second > sectionAndOffset.second)
       {
         map[key] = {value.first, value.second + 40};
+        Section* tempSection = linkerSections[value.first];
+        tempSection->incrementLocationCounter(40);
       }
   }
 }
@@ -445,3 +496,5 @@ size_t Linker::findValueOfSymbol(const size_t &currentFile, const std::string &s
     // }
   }
 }
+
+
