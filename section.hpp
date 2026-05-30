@@ -60,6 +60,7 @@ public:
   static void makeContentOfSectionsNames();
   std::vector<uint8_t> getLittleEndiandOfSection();
   std::string getTextFormatOfSection();
+  std::string getStringSectionName();
 
 private:
   size_t name, locationCounter, idxSection, offsetInFile, sizeOfEntry;

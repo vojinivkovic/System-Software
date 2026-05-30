@@ -288,6 +288,11 @@ std::string Section::getTextFormatOfSection()
 
 }
 
+std::string Section::getStringSectionName()
+{
+  return tableOfSectionString->getNameOfElement(name);
+}
+
 void Section::textRepresentationOfInstruction(const std::string& command, const std::vector<Argument>& arguments)
 {
   std::string instr;

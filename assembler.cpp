@@ -50,6 +50,7 @@ void Assembler::makeELFFiles(const std::string &name)
   size_t sizeOfFile = 10 * sizeof(size_t);
   std::vector<uint8_t> binaryContent;
   std::vector<std::string> textContent;
+  std::string sectionName;
 
   std::cout << "Making Elf files" << std::endl;
 
@@ -65,9 +66,12 @@ void Assembler::makeELFFiles(const std::string &name)
       //   std::reverse(tempContent.begin() + i, tempContent.begin() + i + 4);
       // }
       binaryContent.insert(binaryContent.end(), tempContent.begin(), tempContent.end());
+      sectionName = iSection->getStringSectionName();
+
       std::vector<std::string> tempStringContent = iSection->getTextContent();
       if(!tempStringContent.empty())
       {
+        textContent.push_back(".section: " + sectionName);
         textContent.insert(textContent.end(), tempStringContent.begin(), tempStringContent.end());
       }
       
