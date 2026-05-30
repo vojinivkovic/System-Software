@@ -26,6 +26,7 @@ public:
   static void makeLinkerRelocationEntries();
   static void addSectionMapping(const std::string& secionName, const uint32_t& memAddress);
   static void addFileName(const std::string& fileName) { files.push_back(fileName); }
+  static void makeLinkersSymbolTable();
 
 private:
 
@@ -37,6 +38,7 @@ private:
   static std::vector<Symbol*> linkerSymbols;
   static std::vector<std::string> files;
   static std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>> mappingFileSectionToSectionOffset;
+  static std::map<std::pair<size_t, size_t>, size_t> mappingOfSymbols;
   static StringTable* sectionStringTable;
   static StringTable* symbolStringTable;
   static std::vector<std::vector<RelocationEntry*>> arrayOfRelocationEntryTables;
@@ -45,6 +47,7 @@ private:
   static std::unordered_map<std::string, uint32_t> placeMapping;
   static void fixVirtualAddressOfSections();
   static void addOffsetToSections(std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>>& map, const size_t& idxFile, const size_t& idxSection);
+  static void fixLinkerSymbolTable(const Symbol* symbol, const size_t& symbolName, const size_t& idxFile, const size_t& idxSymbol);
   
 };
 

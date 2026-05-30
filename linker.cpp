@@ -16,6 +16,7 @@ std::vector<Section*> Linker::linkerSections;
 std::vector<Symbol*> Linker::linkerSymbols;
 std::vector<std::string> Linker::files;
 std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>> Linker::mappingFileSectionToSectionOffset;
+std::map<std::pair<size_t, size_t>, size_t> Linker::mappingOfSymbols;
 StringTable* Linker::sectionStringTable = new StringTable(StringTable::STType::SectionName);
 StringTable* Linker::symbolStringTable = new StringTable(StringTable::STType::SymbolName);;
 std::unordered_map<std::string, uint32_t> Linker::placeMapping;
@@ -250,6 +251,10 @@ void Linker::makeLinkerSections()
   Symbol* newSymbol;
   size_t idxSection;
 
+
+  //dodati .UND sekciju
+
+
   for(size_t i = 0; i < arrayOfFilesSections.size(); i++)
   {
     tempSections = arrayOfFilesSections[i];
@@ -347,6 +352,11 @@ void Linker::fixRelocationEntries()
         value = findValueOfSymbol(i, symbolName);
         std::vector<uint8_t> newContent = transformLoadInstruction(destReg, value);
 
+        for(size_t i = 0; i < newContent.size(); i += 4)
+        {
+          std::reverse(newContent.begin() + i, newContent.begin() + i + 4);
+        }
+
         tempContent.erase(tempContent.begin() + offsetOfRelocation, tempContent.begin() + offsetOfRelocation + 4);
         tempContent.insert(tempContent.begin() + offsetOfRelocation, newContent.begin(), newContent.end());
         newSection->setContent(tempContent);
@@ -368,6 +378,81 @@ void Linker::makeLinkerRelocationEntries()
 void Linker::addSectionMapping(const std::string &secionName, const uint32_t &memAddress)
 {
   placeMapping[secionName] = memAddress;
+}
+
+void Linker::fixLinkerSymbolTable(const Symbol* symbol, const size_t& symbolName, const size_t& idxFile, const size_t& idxSymbol)
+{
+  Symbol* linkerSymbol;
+  if(!symbol->getDefined())
+  {
+    return;
+  }
+
+  for(size_t i = 0; i < linkerSymbols.size(); i++)
+  {
+    if(linkerSymbols[i]->getName() == symbolName)
+    {
+      linkerSymbol = linkerSymbols[i];
+    }
+  }
+
+  std::pair<size_t, size_t> sectionAndOffset = mappingFileSectionToSectionOffset[{idxFile, symbol->getSection()}];
+  linkerSymbol->setSize(symbol->getSize());
+  linkerSymbol->setValue(sectionAndOffset.second + symbol->getValue());
+  linkerSymbol->setSection(sectionAndOffset.first);
+  linkerSymbol->setBinding(Symbol::Binding::Export);
+  linkerSymbol->setType(symbol->getType());
+  linkerSymbol->setScope(Symbol::Scope::Global);
+  linkerSymbol->setDefined();
+  mappingOfSymbols[{idxFile, idxSymbol}] = linkerSymbol->getIdx();
+
+}
+void Linker::makeLinkersSymbolTable()
+{
+  std::vector<Symbol*> tempSymbolTable;
+  StringTable* tempSymbolStringTable;
+  Symbol* tempSymbol;
+
+  for(size_t i = 0; i < arrayOfSymbolTables.size(); i++)
+  {
+    tempSymbolTable = arrayOfSymbolTables[i];
+    tempSymbolStringTable = arrayOfSymbolStringsTables[i];
+    for(size_t j = 0; j < tempSymbolTable.size(); j++)
+    { 
+      tempSymbol = tempSymbolTable[j];
+      if(tempSymbol->getType() == Symbol::Type::Section)
+      {
+        continue;
+      }
+      std::string symName = tempSymbolStringTable->getNameOfElement(tempSymbol->getName());
+      size_t symNameInLinker = symbolStringTable->findString(symName);
+      if(tempSymbol->getScope() == Symbol::Scope::Local)
+      {
+        //dodavanje lokalnog simbola
+        std::string newSymbolName = files[i] + "::" + symName;
+        std::pair<size_t, size_t> sectionAndOffset = mappingFileSectionToSectionOffset[{i, tempSymbol->getSection()}];
+        size_t newValue;
+
+        newValue = sectionAndOffset.second + tempSymbol->getValue();        
+
+        Symbol* newSymbol = new Symbol(linkerSymbols.size(), symbolStringTable->getOffset(), tempSymbol->getSize(), newValue, sectionAndOffset.first, Symbol::Binding::NoBinding, tempSymbol->getType(),  Symbol::Scope::Local, true);
+        symbolStringTable->addString(newSymbolName);
+        linkerSymbols.push_back(newSymbol); 
+        mappingOfSymbols[{i, j}] = newSymbol->getIdx();
+      }
+      if(symNameInLinker)
+      {
+        fixLinkerSymbolTable(tempSymbol, symNameInLinker, i, j);
+      }
+      else
+      {
+        Symbol* newSymbol = new Symbol(linkerSymbols.size(), symbolStringTable->getOffset(), 0, 0, 0, Symbol::Binding::Import, Symbol::Type::NoType, Symbol::Scope::Global, false);
+        symbolStringTable->addString(symName);
+        linkerSymbols.push_back(newSymbol); 
+        mappingOfSymbols[{i, j}] = newSymbol->getIdx();
+      }
+    }
+  }
 }
 
 static void fixRelocationTable(std::vector<std::vector<RelocationEntry *>> &array, const size_t &numOfTable, const size_t &numOfEntry)

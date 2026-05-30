@@ -74,7 +74,17 @@ public:
            section(section_),
            bind(bind_),
            type(type_),
-           scope(scope_) {}
+           scope(scope_) 
+           {
+            if(scope == Symbol::Scope::Local || (scope == Symbol::Scope::Global && bind == Symbol::Binding::Export))
+            {
+              defined = true;
+            }
+            else
+            {
+              defined = false;
+            }
+           }
 
   size_t getName() const { return name; }
   size_t getSize() const { return size; }

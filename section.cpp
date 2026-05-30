@@ -36,23 +36,6 @@ int Section::translateInstruction(const std::string &instruction, const std::vec
   }
   content.insert(content.end(), binaryInstruction.begin(), binaryInstruction.end());
   locationCounter += binaryInstruction.size();
-  // if(instruction != "iret")
-  // {
-  //   content.insert(content.end(), binaryInstruction.rbegin(), binaryInstruction.rend());
-  //   locationCounter += 4;
-  // }
-  // else
-  // {
-  //   for(int i = 3; i >= 0; i--)
-  //   {
-  //     content.push_back(binaryInstruction[i]);
-  //   }
-  //   for(int i = 7; i >= 4; i--)
-  //   {
-  //     content.push_back(binaryInstruction[i]);
-  //   }
-  //   locationCounter += 8;
-  // }
   
   return 0;
 }
