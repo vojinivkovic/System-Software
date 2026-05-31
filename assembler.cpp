@@ -61,10 +61,6 @@ void Assembler::makeELFFiles(const std::string &name)
     std::vector<uint8_t> tempContent = iSection->getContent();
     if(!tempContent.empty())
     {
-      // for(size_t i = 0; i < tempContent.size(); i += 4)
-      // {
-      //   std::reverse(tempContent.begin() + i, tempContent.begin() + i + 4);
-      // }
       binaryContent.insert(binaryContent.end(), tempContent.begin(), tempContent.end());
       sectionName = iSection->getStringSectionName();
 
@@ -74,7 +70,7 @@ void Assembler::makeELFFiles(const std::string &name)
         textContent.push_back(".section: " + sectionName);
         textContent.insert(textContent.end(), tempStringContent.begin(), tempStringContent.end());
       }
-      
+      textContent.push_back("END_OF_SECTION");
       sizeOfFile += iSection->getLocationCounter();
     }
     

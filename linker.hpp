@@ -18,6 +18,7 @@ public:
   Linker(const Linker& link) = delete;
   Linker& operator=(const Linker& link) = delete;
   static void readElfFile(const std::string& fileName);
+  static void readInputFiles();
   static void checkMultipleDefinitions();
   static void checkUnresolvedSymbols();
   static void makeLinkerSections();
@@ -26,6 +27,11 @@ public:
   static void makeLinkerRelocationEntries();
   static void addSectionMapping(const std::string& secionName, const uint32_t& memAddress);
   static void addFileName(const std::string& fileName) { files.push_back(fileName); }
+  static void fixAddresses();
+  static void makeRelocElfFile(const std::string& name);
+  static void makeExecElfFile(const std::string& name);
+  static void execPipeline();
+  static void relocPipeline();
 
 private:
 
@@ -41,6 +47,7 @@ private:
   static std::map<std::pair<size_t, size_t>, size_t> mappingOfSymbols;
   static StringTable* sectionStringTable;
   static StringTable* symbolStringTable;
+  static Section* sectionSymTable, *sectionSymStrTable, *sectionSecStrTable;
   static std::vector<std::vector<RelocationEntry*>> arrayOfRelocationEntryTables;
   static void adjustOffset();
   static size_t findValueOfSymbol(const size_t& currentFile, const std::string& symbolName);
@@ -48,7 +55,12 @@ private:
   static void fixVirtualAddressOfSections();
   static void addOffsetToSections(std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>>& map, const size_t& idxFile, const size_t& idxSection);
   static void fixLinkerSymbolTable(const Symbol* symbol, const size_t& symbolName, const size_t& idxFile, const size_t& idxSymbol);
-
+  static void makeRelocationTableSection();
+  static void makeSymbolTableSection();
+  static void makeSectionOfSectionString();
+  static void addContentInSectionSymTable();
+  static void addContentInSectionSymStrTable();
+  static void addContentInSectionSecStrTable();
 };
 
 #endif

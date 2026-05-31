@@ -54,6 +54,7 @@ public:
   void setContent (const std::vector<uint8_t>& content_) { content = content_; }
   void addContent(const std::vector<uint8_t>& newContent);
   void setTextContent (const std::vector<std::string>& textContent_) { textContent = textContent_; }
+  void addTextContent(const std::vector<std::string>& newTextContent);
   void incrementLocationCounter(size_t increment) { locationCounter += increment; }
   static void makeSectionOfSectionNames();
   static std::vector<Section*> readSectionHeader(const std::string& fileName, const size_t& startOfHeader, const size_t& numOfSections);

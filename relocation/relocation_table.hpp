@@ -2,6 +2,8 @@
 #define _RELOCATION_TABLE_HPP_
 
 #include "relocation_entry.hpp"
+#include <string>
+#include "../section.hpp"
 #include <vector>
 
 class RelocationTable

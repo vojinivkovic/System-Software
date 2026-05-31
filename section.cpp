@@ -143,7 +143,11 @@ void Section::addContent(const std::vector<uint8_t>& newContent)
 {
   content.insert(content.end(), newContent.begin(), newContent.end());
   locationCounter += newContent.size();
-} 
+}
+void Section::addTextContent(const std::vector<std::string> &newTextContent)
+{
+  textContent.insert(textContent.end(), newTextContent.begin(), newTextContent.end());
+}
 
 void Section::makeSectionOfSectionNames()
 {

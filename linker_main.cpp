@@ -114,7 +114,33 @@ int main(int argc, char* argv[])
           break;
       }
     }
+    if((isHex && isRelocatable) || (!isHex && !isRelocatable))
+    {
+      return 0;
+    }
+
     outputName = argv[idxOption + 1];
+    Linker::readInputFiles();
+    Linker::checkMultipleDefinitions();
+    if(isHex)
+    {
+      Linker::checkUnresolvedSymbols;
+    }
+    Linker::makeLinkerSections();
+    if(isHex)
+    {
+      Linker::fixAddresses();
+      Linker::fixRelocationEntries();
+      Linker::execPipeline();
+      Linker::makeExecElfFile(outputName);
+    }
+    else if(isRelocatable)
+    {
+      Linker::makeLinkerSymbolTable();
+      Linker::makeLinkerRelocationEntries();
+      Linker::relocPipeline();
+      Linker::makeRelocElfFile(outputName);
+    }
 
   }
   catch(LinkerErrors& err)

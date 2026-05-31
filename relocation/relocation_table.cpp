@@ -1,6 +1,7 @@
 #include "relocation_table.hpp"
 #include "../section.hpp"
 #include "../assembler.hpp"
+#include <string>
 #include <iostream>
 #include <fstream>
 
