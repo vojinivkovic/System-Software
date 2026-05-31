@@ -217,11 +217,15 @@ static Symbol* readSymbolFromTable(std::ifstream& inputFile)
 
 std::vector<Symbol *> SymbolTable::readSymbolsFromElfFile(const std::string &fileName, const Section *symTable)
 {
+  // std::cout << std::to_string(symTable->getSizeOfEntry()) << std::endl;
+  // std::cout << std::to_string(symTable->getLocationCounter()) << std::endl;
+  // std::cout << std::to_string(symTable->getOffsetInFile()) << std::endl;
+
   std::vector<Symbol*> arrayOfSymbols;
   size_t offset = symTable->getOffsetInFile();
   size_t offsetInFile, numOfRows = offset / 4, numOfCol = offset % 4;
   std::ifstream inputFile(fileName);
-  offsetInFile = numOfRows * 13 + numOfCol;
+  offsetInFile = numOfRows * 13 + numOfCol * 3;
   size_t numOfSymbols = symTable->getLocationCounter() / symTable->getSizeOfEntry();
 
   inputFile.seekg(offsetInFile);

@@ -16,6 +16,7 @@ std::vector<std::vector<Symbol*>> Linker::arrayOfSymbolTables;
 std::vector<std::vector<RelocationEntry*>> Linker::arrayOfRelocationEntryTables;
 std::vector<Section*> Linker::linkerSections;
 std::vector<Symbol*> Linker::linkerSymbols;
+std::map<size_t, size_t> Linker::occupiedMemoryRegions;
 std::vector<std::string> Linker::files;
 std::map<std::pair<size_t, size_t>, std::pair<size_t, size_t>> Linker::mappingFileSectionToSectionOffset;
 std::map<std::pair<size_t, size_t>, size_t> Linker::mappingOfSymbols;
@@ -28,34 +29,41 @@ Section* Linker::sectionSymStrTable;
 Section* Linker::sectionSecStrTable;
 
 
-static StringTable* readSectionStringTable(const std::string& fileName, const Section* sectionStringTable, const StringTable::STType& type)
+static StringTable* readSectionStringTable(const std::string& fileName, const Section* tempSectionStringTable, const StringTable::STType& type)
 {
   std::ifstream inputFile(fileName);
-  size_t offset = sectionStringTable->getOffsetInFile();
+  size_t offset = tempSectionStringTable->getOffsetInFile();
   size_t offsetInFile, numOfRows = offset / 4, numOfCol = offset % 4;
-  size_t size = sectionStringTable->getLocationCounter();
+  size_t size = tempSectionStringTable->getLocationCounter();
   char tempChar;
   StringTable* tempStringTable;
 
-  offsetInFile = numOfRows * 13 + numOfCol;
+  offsetInFile = numOfRows * 13 + numOfCol * 3;
   std::string sectionNames;
   inputFile.seekg(offsetInFile);
 
   for(size_t i = 0; i < size; i++)
   {
-    inputFile >> tempChar;
-    sectionNames.push_back(tempChar);
+    std::string hexByte;
+
+    inputFile >> hexByte;
+
+    unsigned int value = std::stoul(hexByte, nullptr, 16);
+
+    sectionNames.push_back(static_cast<char>(value));
   }
   tempStringTable = new StringTable(type, sectionNames);
   return tempStringTable;
 }
 
 static void findSymbolTables(Section*& symbolStringTable, Section*& symbolTable, 
-  const StringTable* sectionStringTable, const std::vector<Section*>& sections)
+  const StringTable* tempSectionStringTable, const std::vector<Section*>& sections)
 {
-  size_t nameSymbolTable = sectionStringTable->findString(".symtable");
-  size_t nameSymbolStringTable = sectionStringTable->findString(".symstrtab");
-
+  size_t nameSymbolTable = tempSectionStringTable->findString(".symtable");
+  size_t nameSymbolStringTable = tempSectionStringTable->findString(".symstrtab");
+  // std::cout << std::to_string(nameSymbolTable) << std::endl;
+  // std::cout << sectionStringTable->getNames() << std::endl;
+  //std::cout << std::to_string(sectionStringTable->getNames().size()) << std::endl;
   for(auto iSection : sections)
   {
     if(iSection->getSectionName() == nameSymbolTable)
@@ -75,9 +83,9 @@ static void findSymbolTables(Section*& symbolStringTable, Section*& symbolTable,
   }
 }
 
-static void findRelocationTableSection(const StringTable* sectionStringTable, const std::vector<Section*>& sections, Section*& relocationTableSection)
+static void findRelocationTableSection(const StringTable* tempSectionStringTable, const std::vector<Section*>& sections, Section*& relocationTableSection)
 {
-  size_t nameRelocationTable = sectionStringTable->findString(".rela");
+  size_t nameRelocationTable = tempSectionStringTable->findString(".rela");
 
   for(auto iSection : sections)
   {
@@ -92,6 +100,7 @@ static void findRelocationTableSection(const StringTable* sectionStringTable, co
 
 void Linker::readElfFile(const std::string &fileName)
 {
+  std::cout << "Reading of the elf file" << std::endl;
   ELFHeader::ELFHeaderType elfType; 
   size_t entry, phoff, shoff, phentsize, phnum, shentsize, shnum, shstrndx;
   std::vector<Section*> tableOfSections;
@@ -101,17 +110,27 @@ void Linker::readElfFile(const std::string &fileName)
   Section* symbolTable, *symbolStringTable, *relocationTable;
 
   ELFHeader::readElfHeader(fileName, elfType, entry, phoff, shoff, phentsize, phnum, shentsize, shnum, shstrndx);
+  //std::cout << "Elf Header read" << std::endl;
+
   tableOfSections = Section::readSectionHeader(fileName, shoff, shnum);
+  //std::cout << "Sections read" << std::endl;
+
   tempSectionStringTable = readSectionStringTable(fileName, tableOfSections[shstrndx], StringTable::STType::SectionName);
+  //std::cout << "Section string read" << std::endl;
 
   findSymbolTables(symbolStringTable, symbolTable, tempSectionStringTable, tableOfSections);
   findRelocationTableSection(tempSectionStringTable, tableOfSections, relocationTable);
+  //std::cout << "Finding symbols and reloc fnished" << std::endl;
+
 
   tempSymbolStringTable = readSectionStringTable(fileName, symbolStringTable, StringTable::STType::SymbolName);
+  //std::cout << "Symbol string read" << std::endl;
 
   tableOfSymbols = SymbolTable::readSymbolsFromElfFile(fileName, symbolTable);
-  tableOfRelocationTables = RelocationTable::readRelocationTableFromElfFile(fileName, relocationTable);
+  //std::cout << "Symbols read" << std::endl;
 
+  tableOfRelocationTables = RelocationTable::readRelocationTableFromElfFile(fileName, relocationTable);
+  //std::cout << "Reloc read" << std::endl;
   //SORT RELOCATION ENTRIES BASED ON OFFSET
     std::sort(tableOfRelocationTables.begin(), tableOfRelocationTables.end(),
     [](const RelocationEntry* a, const RelocationEntry* b)
@@ -246,10 +265,12 @@ std::vector<uint8_t> getContentOfSection(const std::string& fileName, const size
 {
   size_t offsetInFile, numOfRows = offset / 4, numOfCol = offset % 4;
   std::ifstream inputFile(fileName);
-  offsetInFile = numOfRows * 13  + numOfCol;
+  offsetInFile = numOfRows * 13  + numOfCol * 3;
   inputFile.seekg(offsetInFile);
   std::string hexByte;
   std::vector<uint8_t> content;
+
+  //std::cout << "size: " << std::to_string(size) << std::endl;
 
   for(size_t i = 0; i < size; i++)
   {
@@ -347,6 +368,8 @@ void Linker::makeLinkerSections()
   
   for(size_t i = 0; i < arrayOfFilesSections.size(); i++)
   {
+    //std::cout << "num of file: " << i << std::endl;
+
     tempSections = arrayOfFilesSections[i];
     tempSectionStringTable = arrayOfSectionStringTables[i];
     tempSymbolStringTable = arrayOfSymbolStringsTables[i];
@@ -355,10 +378,13 @@ void Linker::makeLinkerSections()
 
     for(int j = 0; j < tempSections.size(); j++)
     {
+      //std::cout << "num of section: " << j << std::endl;
       tempContent = getContentOfSection(files[i], tempSections[j]->getOffsetInFile(), tempSections[j]->getLocationCounter());
-      
+      //std::cout << "content got: " << tempContent.size() << std::endl; 
       tempSectionName = tempSectionStringTable->getNameOfElement(tempSections[j]->getSectionName());
       
+      // std::cout << "section names: " << sectionStringTable->getNames() << std::endl;
+      // std::cout << "section name: " << tempSectionName << std::endl;
       newSectionName = sectionStringTable->findString(tempSectionName);
       symbolName = tempSymbolStringTable->findString(tempSectionName);
 
@@ -368,19 +394,23 @@ void Linker::makeLinkerSections()
         {
           sectionSymbol = tempSymbolTable[k];
           idxSymbol = k;
+          //std::cout << "num of symbol: " << k << std::endl;
           break;
         }
       }
-
+      
+      //std::cout << "new section name: " << newSectionName << std::endl;
       if(!tempContent.size() || tempSectionName == ".rela" || 
       tempSectionName == ".symtable" || tempSectionName == ".symstrtab" 
       || tempSectionName == ".secstrtab")
       {
+        //std::cout << "continuing" << std::endl;
         continue;
       }
-      if(!newSectionName)
+      
+      if(newSectionName == std::string::npos)
       {
-        
+        //std::cout << "making new section: " << tempSectionName << std::endl; 
         newSection = new Section(sectionStringTable->getOffset(), tempSections[j]->getSectionType(), 0, 0, tempSections[j]->getLocationCounter(), tempSections[j]->getSizeOfEntry(), linkerSections.size());
         tempTextContent = getTexContetOfSection(files[i], tempSectionName);
         newSection->setContent(tempContent);
@@ -430,18 +460,22 @@ void Linker::fixRelocationEntries()
   Symbol* tempSymbol;
   Section* tempSection, *newSection;
   
-  for(int i = 0; i < arrayOfRelocationEntryTables.size(); i++)
+  for(size_t i = 0; i < arrayOfRelocationEntryTables.size(); i++)
   {
+    std::cout << "num of file: " << i << std::endl;
     tempRelocationTable = arrayOfRelocationEntryTables[i];
     tempSymbolTable = arrayOfSymbolTables[i];
     tempSectionTable = arrayOfFilesSections[i];
     tempSymbolStringTable = arrayOfSymbolStringsTables[i];
     tempSectionStringTable = arrayOfSectionStringTables[i];
 
-    for(int j = 0; j < tempRelocationTable.size(); j++)
+    for(size_t j = 0; j < tempRelocationTable.size(); j++)
     {
       tempSymbol = tempSymbolTable[tempRelocationTable[j]->getIdxSymbol()];
       tempSection = tempSectionTable[tempRelocationTable[j]->getIdxSection()];
+      std::cout << "num of reloc: " << j << std::endl;
+      std::cout << "idx of symbol: " << tempRelocationTable[j]->getIdxSymbol() << ", idx of section: "
+      << tempRelocationTable[j]->getIdxSection() << std::endl;
 
       std::pair<size_t, size_t> sectionAndOffset = mappingFileSectionToSectionOffset[{i, tempSection->getIdxOfSection()}];
       size_t startOffset = sectionAndOffset.second;
@@ -453,14 +487,19 @@ void Linker::fixRelocationEntries()
       destReg >>= 4;
       size_t value;
       
+      std::cout << sectionStringTable->getNames() << std::endl;
+      std::cout << "section name: " << newSection->getSectionName() << std::endl;
+      std::cout << tempSymbolStringTable->getNames() << std::endl;
+      std::cout << tempSymbol->getName() << std::endl;
 
       if(tempSymbol->getDefined())
       {
-
+        std::cout << "symbol defined" << std::endl;
         std::pair<size_t, size_t> symbolSectionAndOffset = mappingFileSectionToSectionOffset[{i, tempSymbol->getSection()}];
         Section* newSymbolSection = linkerSections[symbolSectionAndOffset.first];
-        value = newSymbolSection->getVirtualAddress() + symbolSectionAndOffset.second + tempSymbol->getValue();
-
+        std::cout << "new virtual address: " << newSymbolSection->getVirtualAddress() << std::endl;
+        value = newSymbolSection->getVirtualAddress() + symbolSectionAndOffset.second + tempSymbol->getValue() + tempRelocationTable[j]->getAddend();
+        std::cout << "new value: " << value << std::endl;
         std::vector<uint8_t> newContent = transformLoadInstruction(destReg, value);
 
         for(size_t i = 0; i < newContent.size(); i += 4)
@@ -476,7 +515,7 @@ void Linker::fixRelocationEntries()
       else
       {
         std::string symbolName = tempSymbolStringTable->getNameOfElement(tempSymbol->getName());
-        value = findValueOfSymbol(i, symbolName);
+        value = findValueOfSymbol(i, symbolName) + tempRelocationTable[j]->getAddend();
         std::vector<uint8_t> newContent = transformLoadInstruction(destReg, value);
 
         for(size_t i = 0; i < newContent.size(); i += 4)
@@ -844,6 +883,23 @@ void Linker::addContentInSectionSecStrTable()
   sectionSecStrTable->setContent(content);
   sectionSecStrTable->setTextContent(textContent);
 }
+bool Linker::checkSectionsOverlapping(const size_t& currentStartSection)
+{
+  size_t currentEndOfSection = occupiedMemoryRegions[currentStartSection];
+  for(const auto& entry : occupiedMemoryRegions)
+  {
+    if(entry.first == currentStartSection)
+    {
+      continue;
+    }
+    if((currentStartSection >= entry.first && currentStartSection <= entry.second) ||
+      (currentEndOfSection >= entry.first && currentEndOfSection <= entry.second)) 
+    {
+      return true;
+    }
+  }
+  return false;
+}
 void Linker::makeLinkerSymbolTable()
 {
   std::vector<Symbol*> tempSymbolTable;
@@ -876,7 +932,7 @@ void Linker::makeLinkerSymbolTable()
         linkerSymbols.push_back(newSymbol); 
         mappingOfSymbols[{i, j}] = newSymbol->getIdx();
       }
-      if(symNameInLinker)
+      if(symNameInLinker != std::string::npos)
       {
         fixLinkerSymbolTable(tempSymbol, symNameInLinker, i, j);
       }
@@ -919,10 +975,10 @@ static void fixSymbolTable(std::vector<std::vector<Symbol*>>& array, const size_
 
 void Linker::fixVirtualAddressOfSections()
 {
-  uint32_t currentVirtualAddress = 0, newVirtualAddress;
+  uint32_t currentVirtualAddress = 0, newVirtualAddress, currentStartMemorySection = 0;
   Section* tempSection;
   std::string sectionName;
-
+  //std::cout << sectionStringTable->getNames() << std::endl;
   for(size_t i = 0; i < linkerSections.size(); i++)
   {
     tempSection = linkerSections[i];
@@ -933,19 +989,29 @@ void Linker::fixVirtualAddressOfSections()
     if(it != placeMapping.end())
     {
       newVirtualAddress = it->second;
-      if(currentVirtualAddress > newVirtualAddress)
-      {
-        throw LinkerErrors(ErrorType::ErrorOverlappingSections, "Section [" + sectionName + "] can't be placed ad define address");
-      }
+      //std::cout << "current address: " << currentVirtualAddress << std::endl;
+      //std::cout << "new virtual address: " << newVirtualAddress << std::endl; 
+      // if(currentVirtualAddress > newVirtualAddress)
+      // {
+      //   throw LinkerErrors(ErrorType::ErrorOverlappingSections, "Section [" + sectionName + "] can't be placed ad define address");
+      // }
       tempSection->setVirtualAddress(newVirtualAddress);
+      currentStartMemorySection = newVirtualAddress;
       currentVirtualAddress = newVirtualAddress;
     }
     else
     {
       tempSection->setVirtualAddress(currentVirtualAddress);
     }
-    currentVirtualAddress += tempSection->getLocationCounter();
 
+    currentVirtualAddress += tempSection->getLocationCounter();
+    occupiedMemoryRegions[currentStartMemorySection] = currentVirtualAddress;
+    if(checkSectionsOverlapping(currentStartMemorySection))
+    {
+     throw LinkerErrors(ErrorType::ErrorOverlappingSections, 
+      "Section [" + sectionName + "] can't be placed ad define address");
+      
+    }
   }
 }
 
@@ -1007,7 +1073,7 @@ size_t Linker::findValueOfSymbol(const size_t &currentFile, const std::string &s
     tempSymbolStringTable = arrayOfSymbolStringsTables[i];
 
     size_t nameOfSymbol = tempSymbolStringTable->findString(symbolName);
-    if(nameOfSymbol)
+    if(nameOfSymbol != std::string::npos)
     {
       tempSymbol = findSymbolInSection(tempSymbolTable, nameOfSymbol);
       if(tempSymbol->getDefined() && tempSymbol->getBinding() == Symbol::Binding::Export && tempSymbol->getScope() == Symbol::Scope::Global)

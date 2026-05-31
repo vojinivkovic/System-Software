@@ -119,20 +119,30 @@ int main(int argc, char* argv[])
       return 0;
     }
 
+    std::cout << "Start" << std::endl;
     outputName = argv[idxOption + 1];
     Linker::readInputFiles();
+    std::cout << "Reading of the files finished" << std::endl;
     Linker::checkMultipleDefinitions();
+    std::cout << "Multiple definitions finished" << std::endl;
     if(isHex)
     {
       Linker::checkUnresolvedSymbols;
+      std::cout << "Unresolved symbols finished" << std::endl;
     }
     Linker::makeLinkerSections();
+    std::cout << "Making linkers sections finished" << std::endl;
     if(isHex)
     {
+      std::cout << "Hex option of linker" << std::endl;
       Linker::fixAddresses();
+      std::cout << "address finish" << std::endl;
       Linker::fixRelocationEntries();
+      std::cout << "reloc finish" << std::endl;
       Linker::execPipeline();
+      std::cout << "pipeline finish" << std::endl;
       Linker::makeExecElfFile(outputName);
+      std::cout << "Linker finish" << std::endl;
     }
     else if(isRelocatable)
     {
@@ -145,7 +155,14 @@ int main(int argc, char* argv[])
   }
   catch(LinkerErrors& err)
   {
+    std::cout << "Error[" << err.toString(err.getErrorType()) << "]" << std::endl
+                << err.what() << std::endl;
+    
+    if(!err.getDetailMessage().empty())
+    {
+      std::cout << "(" << err.getDetailMessage() << ")" << std::endl; 
 
+    }
   }
   catch(const std::runtime_error& err)
   {

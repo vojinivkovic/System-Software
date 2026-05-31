@@ -201,7 +201,7 @@ std::vector<Section *> Section::readSectionHeader(const std::string &fileName, c
   std::vector<Section*> arrayOfSections;
   size_t offsetInFile, numOfRows = startOfHeader / 4, numOfCol = startOfHeader % 4;
   std::ifstream inputFile(fileName);
-  offsetInFile = numOfRows * 13 + numOfCol;
+  offsetInFile = numOfRows * 13 + numOfCol * 3;
 
   inputFile.seekg(offsetInFile);
 

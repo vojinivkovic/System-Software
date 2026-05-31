@@ -49,6 +49,7 @@ private:
   static StringTable* symbolStringTable;
   static Section* sectionSymTable, *sectionSymStrTable, *sectionSecStrTable;
   static std::vector<std::vector<RelocationEntry*>> arrayOfRelocationEntryTables;
+  static std::map<size_t, size_t> occupiedMemoryRegions;
   static void adjustOffset();
   static size_t findValueOfSymbol(const size_t& currentFile, const std::string& symbolName);
   static std::unordered_map<std::string, uint32_t> placeMapping;
@@ -61,6 +62,7 @@ private:
   static void addContentInSectionSymTable();
   static void addContentInSectionSymStrTable();
   static void addContentInSectionSecStrTable();
+  static bool checkSectionsOverlapping(const size_t& currentStartSection);
 };
 
 #endif

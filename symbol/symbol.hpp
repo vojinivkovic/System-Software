@@ -76,7 +76,9 @@ public:
            type(type_),
            scope(scope_) 
            {
-            if(scope == Symbol::Scope::Local || (scope == Symbol::Scope::Global && bind == Symbol::Binding::Export))
+            if(scope == Symbol::Scope::Local || 
+              (scope == Symbol::Scope::Global && bind == Symbol::Binding::Export) || 
+              type == Symbol::Type::Section)
             {
               defined = true;
             }

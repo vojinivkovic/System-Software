@@ -74,11 +74,18 @@ static RelocationEntry* readRelocationEntryFromTable(std::ifstream& inputFile)
 }
 std::vector<RelocationEntry *> RelocationTable::readRelocationTableFromElfFile(const std::string &fileName, const Section *relaTable)
 {
+  // std::cout << std::to_string(relaTable->getSizeOfEntry()) << std::endl;
+  // std::cout << std::to_string(relaTable->getLocationCounter()) << std::endl;
+  // std::cout << std::to_string(relaTable->getOffsetInFile()) << std::endl;
+
   std::vector<RelocationEntry*> arrayOfRelocationEntries;
   size_t offset = relaTable->getOffsetInFile();
   size_t offsetInFile, numOfRows = offset / 4, numOfCol = offset % 4;
   std::ifstream inputFile(fileName);
-  offsetInFile = numOfRows * 13 + numOfCol;
+  offsetInFile = numOfRows * 13 + numOfCol * 3;
+
+  // std::cout << std::to_string(offset) << std::endl;
+  
 
   size_t numOfRelocationEntries = relaTable->getLocationCounter() / relaTable->getSizeOfEntry();
 

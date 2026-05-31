@@ -1,6 +1,7 @@
 #include "string_table.hpp"
 #include "../assembler.hpp"
 #include <cstring>
+#include <iostream>
 
 void StringTable::addString(const std::string& name)
 {
@@ -11,7 +12,7 @@ void StringTable::addString(const std::string& name)
 std::string::size_type StringTable::findString(const std::string &name) const
 {
   size_t pos = 0;
-
+  //std::cout << "names: " << tableOfNames << ", name: " << name << std::endl;
   while (pos < tableOfNames.size()) 
   {
     size_t len = std::strlen(tableOfNames.data() + pos);

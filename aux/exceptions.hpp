@@ -67,6 +67,10 @@ public:
       }
       
     }
+    ErrorType getErrorType() const { return errorCode; }
+    std::string getDetailMessage() const { return detailMessage; }
+
+
   private:
     std::string detailMessage;
     ErrorType errorCode;
