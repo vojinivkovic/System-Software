@@ -269,9 +269,10 @@ std::vector<uint8_t> Section::getLittleEndiandOfSection()
 std::string Section::getTextFormatOfSection()
 {
   std::string stringFormat;
+  size_t vAddress = !vAddress ? 0 : virtualAddress;
   stringFormat = "Name: " + std::to_string(name) + 
     ", Type: " + std::to_string(static_cast<size_t>(type)) + 
-    ", Virtual Address: " + std::to_string(0) + 
+    ", Virtual Address: " + std::to_string(virtualAddress) + 
     ", Offset in ELF file: " + std::to_string(offsetInFile) + 
     ", Size of Section: " + std::to_string(locationCounter) + 
     ", Size of Entry: ";

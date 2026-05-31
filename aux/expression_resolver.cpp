@@ -145,7 +145,7 @@ std::int32_t ExpressionResolver::evaluate()
       else
       {
         tempMacroOperand2 = MacroTable::findMacro(operand2.symbol);
-        tempSymbolOperand2 = SymbolTable::findSymbol(operand1.symbol);
+        tempSymbolOperand2 = SymbolTable::findSymbol(operand2.symbol);
         //operand2Value = tempMacro->getValue();
 
       }

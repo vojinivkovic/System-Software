@@ -11,6 +11,7 @@ Macro::Macro(const size_t& name_, const std::vector<Token>& expression_,
       const std::vector<std::string> dependencySymbol_, const std::vector<ForwardReference*>& fReference) : 
     name(name_), expression(expression_), dependencySymbol(dependencySymbol_), tableForwardReference(fReference) 
 {
+  
   Macro* tempMacro;
   Symbol* tempSymbol;
   std::cout << "Macro constructor" << std::endl;

@@ -462,7 +462,7 @@ void Linker::fixRelocationEntries()
   
   for(size_t i = 0; i < arrayOfRelocationEntryTables.size(); i++)
   {
-    std::cout << "num of file: " << i << std::endl;
+   // std::cout << "num of file: " << i << std::endl;
     tempRelocationTable = arrayOfRelocationEntryTables[i];
     tempSymbolTable = arrayOfSymbolTables[i];
     tempSectionTable = arrayOfFilesSections[i];
@@ -473,9 +473,9 @@ void Linker::fixRelocationEntries()
     {
       tempSymbol = tempSymbolTable[tempRelocationTable[j]->getIdxSymbol()];
       tempSection = tempSectionTable[tempRelocationTable[j]->getIdxSection()];
-      std::cout << "num of reloc: " << j << std::endl;
-      std::cout << "idx of symbol: " << tempRelocationTable[j]->getIdxSymbol() << ", idx of section: "
-      << tempRelocationTable[j]->getIdxSection() << std::endl;
+      //std::cout << "num of reloc: " << j << std::endl;
+      //std::cout << "idx of symbol: " << tempRelocationTable[j]->getIdxSymbol() << ", idx of section: "
+      //<< tempRelocationTable[j]->getIdxSection() << std::endl;
 
       std::pair<size_t, size_t> sectionAndOffset = mappingFileSectionToSectionOffset[{i, tempSection->getIdxOfSection()}];
       size_t startOffset = sectionAndOffset.second;
@@ -487,19 +487,19 @@ void Linker::fixRelocationEntries()
       destReg >>= 4;
       size_t value;
       
-      std::cout << sectionStringTable->getNames() << std::endl;
-      std::cout << "section name: " << newSection->getSectionName() << std::endl;
-      std::cout << tempSymbolStringTable->getNames() << std::endl;
-      std::cout << tempSymbol->getName() << std::endl;
+      //std::cout << sectionStringTable->getNames() << std::endl;
+      //std::cout << "section name: " << newSection->getSectionName() << std::endl;
+      //std::cout << tempSymbolStringTable->getNames() << std::endl;
+      //std::cout << tempSymbol->getName() << std::endl;
 
       if(tempSymbol->getDefined())
       {
-        std::cout << "symbol defined" << std::endl;
+        // std::cout << "symbol defined" << std::endl;
         std::pair<size_t, size_t> symbolSectionAndOffset = mappingFileSectionToSectionOffset[{i, tempSymbol->getSection()}];
         Section* newSymbolSection = linkerSections[symbolSectionAndOffset.first];
-        std::cout << "new virtual address: " << newSymbolSection->getVirtualAddress() << std::endl;
+        //std::cout << "new virtual address: " << newSymbolSection->getVirtualAddress() << std::endl;
         value = newSymbolSection->getVirtualAddress() + symbolSectionAndOffset.second + tempSymbol->getValue() + tempRelocationTable[j]->getAddend();
-        std::cout << "new value: " << value << std::endl;
+        //std::cout << "new value: " << value << std::endl;
         std::vector<uint8_t> newContent = transformLoadInstruction(destReg, value);
 
         for(size_t i = 0; i < newContent.size(); i += 4)
@@ -734,7 +734,7 @@ void Linker::makeRelocElfFile(const std::string &name)
     if ((i + 1) % 4 == 0)
         outBin << '\n';
   }
-  std::ofstream outText(name.substr(0, name.size() - 2) + ".txt");
+  std::ofstream outText("reloc: " + name.substr(0, name.size() - 2) + ".txt");
   for(size_t i = 0; i < textContent.size(); i++)
   {
     outText << textContent[i] << '\n';
