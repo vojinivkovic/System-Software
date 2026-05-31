@@ -22,6 +22,11 @@ std::map<std::pair<size_t, size_t>, size_t> Linker::mappingOfSymbols;
 StringTable* Linker::sectionStringTable = new StringTable(StringTable::STType::SectionName);
 StringTable* Linker::symbolStringTable = new StringTable(StringTable::STType::SymbolName);;
 std::unordered_map<std::string, uint32_t> Linker::placeMapping;
+std::vector<RelocationEntry*> Linker::linkerReloactionEntries;
+Section* Linker::sectionSymTable;
+Section* Linker::sectionSymStrTable; 
+Section* Linker::sectionSecStrTable;
+
 
 static StringTable* readSectionStringTable(const std::string& fileName, const Section* sectionStringTable, const StringTable::STType& type)
 {

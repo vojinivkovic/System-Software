@@ -1,0 +1,42 @@
+CXX := g++
+CXXFLAGS := -std=c++17 -Wall -Wextra -O2 -g
+SRCS := \
+  linker_main.cpp \
+  linker.cpp \
+  elf_header.cpp \
+  section.cpp \
+  aux/auxiliary_func.cpp \
+  aux/directive_functions.cpp \
+  aux/directives.cpp \
+  aux/expression_resolver.cpp \
+  aux/instructions_functions.cpp \
+  aux/string_table.cpp \
+	aux/instructions.cpp \
+  relocation/relocation_entry.cpp \
+  relocation/relocation_table.cpp \
+  symbol/symbol_table.cpp \
+  symbol/symbol.cpp \
+  assembler.cpp \
+  macro/macro_table.cpp \
+  macro/macro.cpp
+
+
+OBJS := $(SRCS:.cpp=.o)
+DEPS := $(OBJS:.o=.d)
+
+#TARGET := linker
+
+#all: $(TARGET)
+
+linker: $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJS)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+
+-include $(DEPS)
+
+clean:
+	rm -f $(OBJS) $(TARGET)
+
+.PHONY: all clean
