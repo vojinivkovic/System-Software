@@ -16,7 +16,8 @@ enum class ErrorType
   ErrorUndefinedMacro,
   ErrorMultipleDefinitions, 
   ErrorUnresolvedSymbol,
-  ErrorOverlappingSections
+  ErrorOverlappingSections,
+  ErrorUninitializedMemory
 };
 
 class AssemblerErrors : public std::runtime_error
@@ -60,9 +61,7 @@ public:
   
     std::string toString(ErrorType code) {
       switch (code) {
-          case ErrorType::ErrorMultipleDefinitions: return "Multiple global definitions of symbol";
-          case ErrorType::ErrorUnresolvedSymbol: return "Unresolved symbol";
-          case ErrorType::ErrorOverlappingSections: return "Sections overlap, place of sections need to changed";
+          case ErrorType::ErrorUninitializedMemory: return "Memory is not initialized.";
           default: return "UnknownError";
       }
       
@@ -77,4 +76,27 @@ public:
 
 };
 
+class CPUErrors : public std::runtime_error 
+{
+public:
+   CPUErrors(ErrorType code, const std::string& msg, const std::string& detail = "") : 
+    std::runtime_error(msg), errorCode(code), detailMessage(detail) {} 
+  
+    std::string toString(ErrorType code) {
+      switch (code) {
+          case ErrorType::ErrorMultipleDefinitions: return "Multiple global definitions of symbol";
+          case ErrorType::ErrorUnresolvedSymbol: return "Unresolved symbol";
+          case ErrorType::ErrorOverlappingSections: return "Sections overlap, place of sections need to changed";
+          default: return "UnknownError";
+      }
+      
+    }
+    ErrorType getErrorType() const { return errorCode; }
+    std::string getDetailMessage() const { return detailMessage; }
+
+
+private:
+    std::string detailMessage;
+    ErrorType errorCode;
+};
 #endif
