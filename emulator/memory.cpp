@@ -4,6 +4,7 @@
 #include <sstream>
 #include "memory_constant.hpp"
 #include "../aux/exceptions.hpp"
+#include "register_file.hpp"
 
 std::unordered_map<uint32_t, Page*> Memory::pageTable;
 
@@ -51,6 +52,28 @@ void Memory::memWrite(const uint32_t &address, const uint8_t &content)
   }
 }
 
+void Memory::memWrite4Bytes(const uint32_t &address, const uint32_t &content)
+{
+  uint8_t byteContent;
+  for(size_t i = 0; i < 4; i++)
+  {
+    byteContent = (content >> (i * 8)) & 0xFF;
+    memWrite(address + i, byteContent);
+  }
+}
+
+void Memory::pushOnStack(const uint32_t &value)
+{
+  uint32_t sp = RegisterFile::readFromGPRegister(14);
+  for(size_t i = 0; i < 4; i++)
+  {
+    sp--;
+    uint8_t byteValue = (value >> ((3 - i) * 8)) & 0xFF;
+    memWrite(sp, byteValue); 
+  }
+  RegisterFile::writeToGPRegister(14, sp);
+}
+
 uint8_t Memory::memRead(const uint32_t &address)
 {
   uint32_t pageNumber = address / PAGE_SIZE;
@@ -60,4 +83,16 @@ uint8_t Memory::memRead(const uint32_t &address)
     throw CPUErrors(ErrorType::ErrorUninitializedMemory, "Memory [" + std::to_string(address) + "] is not initialized");
   }
   return it->second->read(address % PAGE_SIZE);
+}
+
+uint32_t Memory::memRead4bytes(const uint32_t &address)
+{
+  uint32_t value = 0;
+  uint8_t byteContent;
+  for(size_t i = 0; i < 4; i++)
+  {
+    byteContent = memRead(address + i);
+    value |= static_cast<uint32_t>(byteContent) << 8 * i;
+  }
+  return value;
 }
