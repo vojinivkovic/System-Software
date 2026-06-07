@@ -4,6 +4,8 @@
 #include <sstream>
 #include "memory_constant.hpp"
 #include "../aux/exceptions.hpp"
+#include "terminal.hpp"
+#include "timer.hpp"
 #include "register_file.hpp"
 
 std::unordered_map<uint32_t, Page*> Memory::pageTable;
@@ -12,6 +14,11 @@ void Memory::initializeMemory(const std::string& fileName)
 {
   std::ifstream file(fileName);
   std::string line;
+
+  if (!file)
+  {
+    throw std::runtime_error("Failed to open file: " + fileName);
+  }
 
   while (std::getline(file, line))
   {
@@ -59,6 +66,14 @@ void Memory::memWrite4Bytes(const uint32_t &address, const uint32_t &content)
   {
     byteContent = (content >> (i * 8)) & 0xFF;
     memWrite(address + i, byteContent);
+  }
+  if(address == 0xFFFFFF00)
+  {
+    Terminal::displayCharacter();
+  }
+  else if(address == 0xFFFFFF10)
+  {
+    Timer::changeConfig();
   }
 }
 

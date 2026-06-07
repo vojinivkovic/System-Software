@@ -18,8 +18,9 @@ public:
   static void writeToSPRegister(const uint8_t& regNum, const uint32_t& value) { specialPurposeRegisters[regNum] = value; }
   static uint32_t readFromGPRegister(const uint8_t& regNum) { return registers[regNum]; }
   static uint32_t readFromSPRegister(const uint8_t& regNum) { return specialPurposeRegisters[regNum]; }
+  static void getStateOfRegisterFile();
 private:
-  static uint32_t registers[15], specialPurposeRegisters[3];
+  static uint32_t registers[16], specialPurposeRegisters[3];
 
 };
 

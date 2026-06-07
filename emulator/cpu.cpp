@@ -1,6 +1,8 @@
 #include "cpu.hpp"
 #include "register_file.hpp"
 #include "memory.hpp"
+#include "terminal.hpp"
+#include "timer.hpp"
 
 uint8_t CPU::instructionRegister[4];
 
@@ -9,12 +11,15 @@ void CPU::initializeCPU(const std::string& fileName)
   Memory::initializeMemory(fileName);
   initializeTableOfInstructions();
   RegisterFile::writeToGPRegister(15, 0x40000000);
+  Terminal::initializeTerminal();
+  Timer::initializeTimer();
 }
 
 void CPU::runProgram()
 {
   while(true)
   {
+    RegisterFile::getStateOfRegisterFile();
     fetchInstruction();
     InstructionOPCodes opCode = decode();
     if(opCode == InstructionOPCodes::HALT)
@@ -22,8 +27,12 @@ void CPU::runProgram()
       break;
     }
     executeInstruction(opCode);
+    Terminal::pollKeyboard();
+    Timer::poll();
     checkForInterrupt();
   }
+  Terminal::restoreTerminalSettings();
+  RegisterFile::getStateOfRegisterFile();
 }
 
 void CPU::fetchInstruction()
@@ -377,6 +386,7 @@ void CPU::checkForInterrupt()
   (!maskGlobalInterrupts && !maskTerminalInterrupt && regCauseValue == 3)) 
   {
     uint32_t regPCValue = RegisterFile::readFromGPRegister(15);
+
 
     Memory::pushOnStack(regStatusValue);
     Memory::pushOnStack(regPCValue);

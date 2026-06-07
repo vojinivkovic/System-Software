@@ -17,7 +17,8 @@ enum class ErrorType
   ErrorMultipleDefinitions, 
   ErrorUnresolvedSymbol,
   ErrorOverlappingSections,
-  ErrorUninitializedMemory
+  ErrorUninitializedMemory,
+  ErrorUndefinedTimerConfig
 };
 
 class AssemblerErrors : public std::runtime_error
@@ -26,8 +27,10 @@ public:
   AssemblerErrors(ErrorType code, const std::string& msg, const int& section, const int& line, const std::string& detail = "") : 
     std::runtime_error(msg), errorCode(code), sectionName(section), lineInSection(line), detailMessage(detail) {} 
   
-    std::string toString(ErrorType code) {
-      switch (code) {
+    std::string toString(ErrorType code) 
+    {
+      switch (code) 
+      {
           case ErrorType::ErrorTooManyArguments: return "TooManyArguments";
           case ErrorType::ErrorUndefinedMacro: return "UndefinedMacro";
           case ErrorType::ErrorUndefinedSymbol: return "UndefinedSymbol";
@@ -59,9 +62,13 @@ public:
   LinkerErrors(ErrorType code, const std::string& msg, const std::string& detail = "") : 
     std::runtime_error(msg), errorCode(code), detailMessage(detail) {} 
   
-    std::string toString(ErrorType code) {
-      switch (code) {
-          case ErrorType::ErrorUninitializedMemory: return "Memory is not initialized.";
+    std::string toString(ErrorType code) 
+    {
+      switch (code) 
+      {
+          case ErrorType::ErrorMultipleDefinitions: return "Multiple global definitions of symbol";
+          case ErrorType::ErrorUnresolvedSymbol: return "Unresolved symbol";
+          case ErrorType::ErrorOverlappingSections: return "Sections overlap, place of sections need to changed";
           default: return "UnknownError";
       }
       
@@ -82,11 +89,13 @@ public:
    CPUErrors(ErrorType code, const std::string& msg, const std::string& detail = "") : 
     std::runtime_error(msg), errorCode(code), detailMessage(detail) {} 
   
-    std::string toString(ErrorType code) {
-      switch (code) {
-          case ErrorType::ErrorMultipleDefinitions: return "Multiple global definitions of symbol";
-          case ErrorType::ErrorUnresolvedSymbol: return "Unresolved symbol";
-          case ErrorType::ErrorOverlappingSections: return "Sections overlap, place of sections need to changed";
+
+    std::string toString(ErrorType code) 
+    {
+      switch (code) 
+      {
+          case ErrorType::ErrorUninitializedMemory: return "Memory is not initialized.";
+          case ErrorType::ErrorUndefinedTimerConfig: return "Undefined timer config.";
           default: return "UnknownError";
       }
       
