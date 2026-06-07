@@ -4,8 +4,11 @@
 
 uint8_t CPU::instructionRegister[4];
 
-void CPU::initializeCPU()
+void CPU::initializeCPU(const std::string& fileName)
 {
+  Memory::initializeMemory(fileName);
+  initializeTableOfInstructions();
+  RegisterFile::writeToGPRegister(15, 0x40000000);
 }
 
 void CPU::runProgram()
@@ -19,6 +22,7 @@ void CPU::runProgram()
       break;
     }
     executeInstruction(opCode);
+    checkForInterrupt();
   }
 }
 
@@ -42,7 +46,13 @@ CPU::InstructionOPCodes CPU::decode()
 
 void CPU::executeInstruction(InstructionOPCodes code)
 {
-  instructionSet[static_cast<size_t>(code)]();
+  size_t idxCode = static_cast<size_t>(code);
+  if(idxCode < 0 || idxCode > 9)
+  {
+    RegisterFile::writeToSPRegister(2, 1);
+    return;
+  }
+  instructionSet[idxCode]();
 }
 
 void CPU::instructionSoftwareInterrupt()
@@ -58,8 +68,9 @@ void CPU::instructionSoftwareInterrupt()
   RegisterFile::writeToSPRegister(2, 4);
 
   regStatusValue = regStatusValue | 0b100;
+  RegisterFile::writeToSPRegister(0, regStatusValue);
   RegisterFile::writeToGPRegister(15, regHandlerValue);
-  
+
 }
 
 void CPU::instructionCall()
@@ -333,6 +344,46 @@ void CPU::instructionLoad()
       valueRegB = valueRegB + signedDisp;
       RegisterFile::writeToGPRegister(regB, valueRegB);
       break;
+  }
+}
+
+void CPU::initializeTableOfInstructions()
+{
+  instructionSet[static_cast<size_t>(InstructionOPCodes::INT)] = &instructionSoftwareInterrupt;
+  instructionSet[static_cast<size_t>(InstructionOPCodes::CALL)] = &instructionCall;
+  instructionSet[static_cast<size_t>(InstructionOPCodes::JUMP)] = &instructionJump; 
+  instructionSet[static_cast<size_t>(InstructionOPCodes::EXCHG)] = &instructionExchg;
+  instructionSet[static_cast<size_t>(InstructionOPCodes::ARITH)] = &instructionArithmetic;  
+  instructionSet[static_cast<size_t>(InstructionOPCodes::LOG)] = &instructionLogic; 
+  instructionSet[static_cast<size_t>(InstructionOPCodes::SHIFT)] = &instructionShift; 
+  instructionSet[static_cast<size_t>(InstructionOPCodes::ST)] = &instructionStore; 
+  instructionSet[static_cast<size_t>(InstructionOPCodes::LD)] = &instructionLoad;   
+}
+
+void CPU::checkForInterrupt()
+{
+  uint32_t regStatusValue, regHandlerValue;
+  uint8_t regCauseValue, maskGlobalInterrupts, maskTimerInterrupt, maskTerminalInterrupt;
+  regStatusValue = RegisterFile::readFromSPRegister(0);
+  regHandlerValue = RegisterFile::readFromSPRegister(1);
+  regCauseValue = static_cast<uint8_t>(RegisterFile::readFromSPRegister(2));
+  
+  maskGlobalInterrupts = regStatusValue & 0b100;
+  maskTimerInterrupt = regStatusValue & 0b1;
+  maskTerminalInterrupt = regStatusValue & 0b10;
+  
+  if(regCauseValue == 1 ||
+  (!maskGlobalInterrupts && !maskTimerInterrupt && regCauseValue == 2) || 
+  (!maskGlobalInterrupts && !maskTerminalInterrupt && regCauseValue == 3)) 
+  {
+    uint32_t regPCValue = RegisterFile::readFromGPRegister(15);
+
+    Memory::pushOnStack(regStatusValue);
+    Memory::pushOnStack(regPCValue);
+
+    regStatusValue = regStatusValue | 0b100;
+    RegisterFile::writeToSPRegister(0, regStatusValue);
+    RegisterFile::writeToGPRegister(15, regHandlerValue);
   }
 }
 

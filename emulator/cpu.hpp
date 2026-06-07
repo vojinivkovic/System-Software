@@ -21,7 +21,7 @@ public:
     ST, 
     LD
   };
-  static void initializeCPU();
+  static void initializeCPU(const std::string& fileName);
   static void runProgram();
 private:
   static void fetchInstruction();
@@ -38,6 +38,8 @@ private:
   static void instructionShift();
   static void instructionStore();
   static void instructionLoad();
+  static void initializeTableOfInstructions();
+  static void checkForInterrupt();
 
   static uint8_t extractRegisterA();
   static uint8_t extractRegisterB();
