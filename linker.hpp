@@ -63,6 +63,8 @@ private:
   static void addContentInSectionSymStrTable();
   static void addContentInSectionSecStrTable();
   static bool checkSectionsOverlapping(const size_t& currentStartSection);
+  static void fixSymbolTable(std::vector<std::vector<Symbol*>>& array, const size_t& numOfTable, const size_t& offset, const size_t& idxSection);
+
 };
 
 #endif

@@ -4,8 +4,11 @@
 #include "terminal.hpp"
 #include "timer.hpp"
 #include <string>
+#include <iomanip>
 
 uint8_t CPU::instructionRegister[4];
+void (*CPU::instructionSet[10])();
+size_t CPU::numOfInstructions = 0;
 
 void CPU::initializeCPU(const std::string& fileName)
 {
@@ -18,9 +21,15 @@ void CPU::initializeCPU(const std::string& fileName)
 
 void CPU::runProgram()
 {
+
   while(true)
   {
-    RegisterFile::getStateOfRegisterFile();
+    //RegisterFile::getStateOfRegisterFile();
+    // if(counter < 26)
+    // {
+    //   RegisterFile::getStateOfRegisterFile();
+    //   counter++;
+    // }
     fetchInstruction();
     InstructionOPCodes opCode = decode();
     if(opCode == InstructionOPCodes::HALT)
@@ -31,6 +40,7 @@ void CPU::runProgram()
     Terminal::pollKeyboard();
     Timer::poll();
     checkForInterrupt();
+    numOfInstructions++;
   }
   Terminal::restoreTerminalSettings();
   RegisterFile::getStateOfRegisterFile();
@@ -45,7 +55,7 @@ void CPU::fetchInstruction()
     instructionRegister[i] = Memory::memRead(pc);
     pc++;
   }
-
+  RegisterFile::writeToGPRegister(15, pc);
 }
 
 CPU::InstructionOPCodes CPU::decode()
@@ -90,11 +100,20 @@ void CPU::instructionCall()
   uint32_t pc = RegisterFile::readFromGPRegister(15);
   Memory::pushOnStack(pc);
 
+  //std::cout << "call instruction" << std::endl;
   uint8_t regA, regB, regC;
   uint16_t disp;
   extractInstructionFiels(regA, regB, regC, disp);
   uint32_t newPC = RegisterFile::readFromGPRegister(regA) + RegisterFile::readFromGPRegister(regB) + disp;
   RegisterFile::writeToGPRegister(15, newPC);
+
+  std::cout << "PC CHANGE[CALL]: 0x"
+      << std::hex
+      << std::setw(8)
+      << std::setfill('0')
+      << newPC
+      << std::endl;
+    
 
 }
 
@@ -115,12 +134,26 @@ void CPU::instructionJump()
     case 0x0:
       newPC = valueRegA + disp;
       RegisterFile::writeToGPRegister(15, newPC);
+        std::cout << "PC CHANGE[JUMP]: 0x"
+        << std::hex
+        << std::setw(8)
+        << std::setfill('0')
+        << newPC
+        << std::endl;
       break;
     case 0x1:
       if(valueRegB == valueRegC)
       {
         newPC = valueRegA + disp;
         RegisterFile::writeToGPRegister(15, newPC);
+        std::cout << "PC CHANGE[BEQ]: 0x"
+        << std::hex
+        << std::setw(8)
+        << std::setfill('0')
+        << newPC
+        << std::endl;
+        std::cout << "value B: " << std::to_string(valueRegB) << ", value C: " 
+        << std::to_string(valueRegC) << std::endl;
       }
       break;
     case 0x2:
@@ -128,12 +161,24 @@ void CPU::instructionJump()
       {
         newPC = valueRegA + disp;
         RegisterFile::writeToGPRegister(15, newPC);
+        std::cout << "PC CHANGE[BNEQ]: 0x"
+        << std::hex
+        << std::setw(8)
+        << std::setfill('0')
+        << newPC
+        << std::endl;
       }
       break;
     case 0x3:
       if(static_cast<int>(valueRegB) > static_cast<int>(valueRegC))
       {
         newPC = valueRegA + disp;
+        std::cout << "PC CHANGE[SIGNED]: 0x"
+        << std::hex
+        << std::setw(8)
+        << std::setfill('0')
+        << newPC
+        << std::endl;
         RegisterFile::writeToGPRegister(15, newPC);
       }
       break;
@@ -330,6 +375,15 @@ void CPU::instructionLoad()
       break;
     case 0x3:
       valueRegA = Memory::memRead4bytes(valueRegB);
+      if(regA == 15) 
+      {
+        std::cout << "PC CHANGE[POP]: 0x"
+        << std::hex
+        << std::setw(8)
+        << std::setfill('0')
+        << valueRegA
+        << std::endl;
+      }
       RegisterFile::writeToGPRegister(regA, valueRegA);
 
       valueRegB = valueRegB + signedDisp;

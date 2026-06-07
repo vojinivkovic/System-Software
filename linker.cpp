@@ -955,6 +955,7 @@ static void fixRelocationTable(std::vector<std::vector<RelocationEntry *>> &arra
     if(array[numOfTable][i]->getIdxSection() == array[numOfTable][numOfEntry]->getIdxSection())
     {
       array[numOfTable][i]->setOffset(array[numOfTable][i]->getOffset() + 40);
+      
     }
     else
     {
@@ -962,12 +963,27 @@ static void fixRelocationTable(std::vector<std::vector<RelocationEntry *>> &arra
     }
   }
 }
-static void fixSymbolTable(std::vector<std::vector<Symbol*>>& array, const size_t& numOfTable, const size_t& offset, const size_t& idxSection)
+void Linker::fixSymbolTable(std::vector<std::vector<Symbol*>>& array, const size_t& numOfTable, const size_t& offset, const size_t& idxSection)
 {
   for(size_t i = 0; i < array[numOfTable].size(); i++)
   {
     if(array[numOfTable][i]->getSection() == idxSection && array[numOfTable][i]->getValue() > offset)
     {
+      std::vector<RelocationEntry*> tempRelocTable = arrayOfRelocationEntryTables[numOfTable];
+      for(size_t j = 0; j < tempRelocTable.size(); j++)
+      {
+        if(tempRelocTable[j]->getAddend())
+        {
+          size_t idxSymbol = tempRelocTable[j]->getIdxSymbol();
+          Symbol* tempSymbol = array[numOfTable][idxSymbol];
+          if(tempSymbol->getSection() == array[numOfTable][i]->getSection() && 
+          (tempSymbol->getValue() + tempRelocTable[j]->getAddend() == array[numOfTable][i]->getValue()))
+          {
+            tempRelocTable[j]->setAddend(tempRelocTable[j]->getAddend() + 40);
+          }
+        }
+        
+      }
       array[numOfTable][i]->setValue(array[numOfTable][i]->getValue() + 40);
     }
   }

@@ -1,6 +1,8 @@
 #ifndef _REGISTER_FILE_HPP_
 #define _REGISTER_FILE_HPP_
 #include <cstdint>
+#include <iomanip>
+#include <iostream>
 
 class RegisterFile
 {

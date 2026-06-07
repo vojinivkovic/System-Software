@@ -24,6 +24,7 @@ public:
   };
   static void initializeCPU(const std::string& fileName);
   static void runProgram();
+  static size_t getNumberOfInstructions() { return numOfInstructions; }
 private:
   static void fetchInstruction();
   static InstructionOPCodes decode();
@@ -47,5 +48,7 @@ private:
   static uint8_t extractRegisterC();
   static uint16_t extractDisplay();
   static void extractInstructionFiels(uint8_t& regA, uint8_t& regB, uint8_t& regC, uint16_t& disp);
+  static size_t numOfInstructions;
+
 };
 #endif

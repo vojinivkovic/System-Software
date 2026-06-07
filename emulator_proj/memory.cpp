@@ -7,6 +7,7 @@
 #include "terminal.hpp"
 #include "timer.hpp"
 #include "register_file.hpp"
+#include "cpu.hpp"
 
 std::unordered_map<uint32_t, Page*> Memory::pageTable;
 
@@ -95,7 +96,11 @@ uint8_t Memory::memRead(const uint32_t &address)
   auto it = pageTable.find(pageNumber);
   if(it == pageTable.end())
   {
-    throw CPUErrors(ErrorType::ErrorUninitializedMemory, "Memory [" + std::to_string(address) + "] is not initialized");
+    uint32_t pc = RegisterFile::readFromGPRegister(15);
+    RegisterFile::getStateOfRegisterFile();
+    throw CPUErrors(ErrorType::ErrorUninitializedMemory, "Memory [" + std::to_string(address) + "] is not initialized, PC: " \
+    + std::to_string(CPU::getNumberOfInstructions()));
+
   }
   return it->second->read(address % PAGE_SIZE);
 }
