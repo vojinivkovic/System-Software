@@ -3,6 +3,7 @@
 #include "memory.hpp"
 #include "terminal.hpp"
 #include "timer.hpp"
+#include <string>
 
 uint8_t CPU::instructionRegister[4];
 

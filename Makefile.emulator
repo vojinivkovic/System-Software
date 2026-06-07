@@ -1,13 +1,13 @@
 CXX := g++
 CXXFLAGS := -std=c++17 -Wall -Wextra -O2 -g
 SRCS := \
-  emulator/emulator_main.cpp \
-  emulator/cpu.cpp \
-  emulator/memory.cpp \
-  emulator/page.cpp \
-  emulator/register_file.cpp \
-  emulator/terminal.cpp \
-  emulator/timer.cpp
+  emulator_proj/emulator_main.cpp \
+  emulator_proj/cpu.cpp \
+  emulator_proj/memory.cpp \
+  emulator_proj/page.cpp \
+  emulator_proj/register_file.cpp \
+  emulator_proj/terminal.cpp \
+  emulator_proj/timer.cpp
 
 OBJS := $(SRCS:.cpp=.o)
 DEPS := $(OBJS:.o=.d)

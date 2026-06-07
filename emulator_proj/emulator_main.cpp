@@ -2,6 +2,7 @@
 #include "../aux/exceptions.hpp"
 #include <string>
 #include <iostream>
+#include <string>
 
 int main(int argc, char* argv[])
 {
