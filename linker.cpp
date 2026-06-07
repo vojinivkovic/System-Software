@@ -1042,9 +1042,9 @@ void Linker::addOffsetToSections(std::map<std::pair<size_t, size_t>, std::pair<s
       if(value.first == sectionAndOffset.first && value.second > sectionAndOffset.second)
       {
         map[key] = {value.first, value.second + 40};
-        Section* tempSection = linkerSections[value.first];
-        tempSection->incrementLocationCounter(40);
       }
+      Section* tempSection = linkerSections[value.first];
+      tempSection->incrementLocationCounter(40);
   }
 }
 
