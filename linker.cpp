@@ -473,6 +473,7 @@ void Linker::fixRelocationEntries()
     {
       tempSymbol = tempSymbolTable[tempRelocationTable[j]->getIdxSymbol()];
       tempSection = tempSectionTable[tempRelocationTable[j]->getIdxSection()];
+      
       //std::cout << "num of reloc: " << j << std::endl;
       //std::cout << "idx of symbol: " << tempRelocationTable[j]->getIdxSymbol() << ", idx of section: "
       //<< tempRelocationTable[j]->getIdxSection() << std::endl;
@@ -1043,8 +1044,8 @@ void Linker::addOffsetToSections(std::map<std::pair<size_t, size_t>, std::pair<s
       {
         map[key] = {value.first, value.second + 40};
       }
-      Section* tempSection = linkerSections[value.first];
-      tempSection->incrementLocationCounter(40);
+      // Section* tempSection = linkerSections[value.first];
+      // tempSection->incrementLocationCounter(40);
   }
 }
 
@@ -1059,6 +1060,10 @@ void Linker::adjustOffset()
     {
       fixRelocationTable(arrayOfRelocationEntryTables, i, j);
       addOffsetToSections(mappingFileSectionToSectionOffset, i, tempRelocationTable[j]->getIdxSection());
+      std::pair<size_t, size_t> sectionAndOffset = mappingFileSectionToSectionOffset[{i, tempRelocationTable[j]->getIdxSection()}];
+      Section* tempSection = linkerSections[sectionAndOffset.first];
+      tempSection->incrementLocationCounter(40);
+
       fixSymbolTable(arrayOfSymbolTables, i, tempRelocationTable[j]->getOffset(), tempRelocationTable[j]->getIdxSection());
     }
   }
