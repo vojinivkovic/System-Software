@@ -1004,7 +1004,7 @@ std::vector<uint8_t> instructionLoad(const std::vector<Argument> &arguments)
   {
     if(arguments[0].type == ArgumentType::Register)
     {
-      instr.push_back(0x91);
+      instr.push_back(0x92);
       instr.push_back((arguments[1].registerNum << 4) | (arguments[0].registerNum & 0xF));
       instr.push_back(0x00);
       instr.push_back(0x00);

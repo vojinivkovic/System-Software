@@ -2,9 +2,12 @@
 #include "../aux/exceptions.hpp"
 #include "../assembler.hpp"
 #include <iostream>
+#include "../symbol/symbol.hpp"
+#include "../symbol/symbol_table.hpp"
 
 std::vector<Macro*> MacroTable::table;
 StringTable* MacroTable::tableOfMacroString = new StringTable(StringTable::STType::MacroName);
+std::unordered_map<size_t, size_t> MacroTable::mappingMacroToSymbol;
 
 Macro *MacroTable::findMacro(const std::string &name)
 {
@@ -115,4 +118,19 @@ std::vector<std::string> MacroTable::getTextRepresentationOfMacros()
     macroTable.push_back(tempElem);
   }
   return macroTable;
+}
+
+void MacroTable::addMapping(const size_t &idxMacro, const size_t &idxSymbol)
+{
+  mappingMacroToSymbol[idxMacro] = idxSymbol;
+}
+
+void MacroTable::setValuesOfSymbols()
+{
+  for(size_t i = 0; i < table.size(); i++)
+  {
+    Symbol* tempSymbol = SymbolTable::getSymbolBasedOnIdx(mappingMacroToSymbol[i]);
+    tempSymbol->setDefined();
+    tempSymbol->setValue(table[i]->getValue());
+  }
 }

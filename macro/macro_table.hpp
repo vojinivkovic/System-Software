@@ -3,7 +3,7 @@
 #include <vector>
 #include "macro.hpp"
 #include "../aux/string_table.hpp"
-
+#include <unordered_map>
 
 class MacroTable 
 {
@@ -17,12 +17,16 @@ public:
   static void tryToResolveAllMacros(const std::vector<std::string>& definedSymbols);
   static std::string getNameOfMacro(size_t name);
   static bool checkDefinition(Macro*& undefinedMacro);
+  static size_t getSizeOfMacroTable() { return table.size(); }
   static void resolveForwardReference();
   static std::string getMacroNames() { return tableOfMacroString->getNames(); }
   static std::vector<std::string> getTextRepresentationOfMacros();
+  static void addMapping(const size_t& idxMacro, const size_t& idxSymbol);
+  static void setValuesOfSymbols();
 
 private:
   static std::vector<Macro*> table;
+  static std::unordered_map<size_t, size_t> mappingMacroToSymbol;
   static StringTable* tableOfMacroString;
 };
 

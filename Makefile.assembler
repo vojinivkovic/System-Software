@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O2 -g
 LDFLAGS =
 SRC_DIRS := .
-SRCS := $(filter-out ./linker.cpp ./linker_main.cpp, \
+SRCS := $(filter-out ./linker.cpp ./linker_main.cpp ./emulator_proj/%, \
          $(shell find $(SRC_DIRS) -name '*.cpp' -print))
 OBJS := $(SRCS:.cpp=.o)
 DEPS := $(OBJS:.o=.d) lex.yy.d y.tab.d

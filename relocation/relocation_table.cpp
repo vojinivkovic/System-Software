@@ -13,6 +13,17 @@ void RelocationTable::fixRelocationEntry(size_t idx, size_t newIdxOfSymbol, size
   table[idx]->setAddend(addend);
 }
 
+void RelocationTable::addjustRelocationOffset(const size_t& idxSection, const size_t& offsetOfSymbol, const size_t& shift)
+{
+  for(auto iReloc : table)
+  {
+    if(iReloc->getIdxSection() == idxSection && iReloc->getOffset() > offsetOfSymbol)
+    {
+      iReloc->setOffset(iReloc->getOffset() + shift);
+    }
+  }
+}
+
 void RelocationTable::makeSection()
 {
   Section* newSection = new Section(".rela", Section::SectionType::RelaSection);

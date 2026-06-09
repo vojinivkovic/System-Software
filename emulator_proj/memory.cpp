@@ -70,10 +70,12 @@ void Memory::memWrite4Bytes(const uint32_t &address, const uint32_t &content)
   }
   if(address == 0xFFFFFF00)
   {
+    //std::cout << "Display char" << std::endl;
     Terminal::displayCharacter();
   }
   else if(address == 0xFFFFFF10)
   {
+    std::cout << "Change timer config" << std::endl;
     Timer::changeConfig();
   }
 }

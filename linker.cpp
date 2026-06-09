@@ -268,9 +268,13 @@ std::vector<uint8_t> getContentOfSection(const std::string& fileName, const size
   offsetInFile = numOfRows * 13  + numOfCol * 3;
   inputFile.seekg(offsetInFile);
   std::string hexByte;
-  std::vector<uint8_t> content;
+  std::vector<uint8_t> content{};
 
   //std::cout << "size: " << std::to_string(size) << std::endl;
+  if(size == 0) 
+  {
+    return content;
+  }
 
   for(size_t i = 0; i < size; i++)
   {
@@ -375,7 +379,7 @@ void Linker::makeLinkerSections()
     tempSymbolStringTable = arrayOfSymbolStringsTables[i];
     tempSymbolTable  = arrayOfSymbolTables[i];
 
-
+  
     for(int j = 0; j < tempSections.size(); j++)
     {
       //std::cout << "num of section: " << j << std::endl;
@@ -462,7 +466,7 @@ void Linker::fixRelocationEntries()
   
   for(size_t i = 0; i < arrayOfRelocationEntryTables.size(); i++)
   {
-   // std::cout << "num of file: " << i << std::endl;
+    //std::cout << "num of file: " << i << std::endl;
     tempRelocationTable = arrayOfRelocationEntryTables[i];
     tempSymbolTable = arrayOfSymbolTables[i];
     tempSectionTable = arrayOfFilesSections[i];
@@ -473,10 +477,10 @@ void Linker::fixRelocationEntries()
     {
       tempSymbol = tempSymbolTable[tempRelocationTable[j]->getIdxSymbol()];
       tempSection = tempSectionTable[tempRelocationTable[j]->getIdxSection()];
-      
-      //std::cout << "num of reloc: " << j << std::endl;
-      //std::cout << "idx of symbol: " << tempRelocationTable[j]->getIdxSymbol() << ", idx of section: "
-      //<< tempRelocationTable[j]->getIdxSection() << std::endl;
+
+      // std::cout << "num of reloc: " << j << std::endl;
+      // std::cout << "idx of symbol: " << tempRelocationTable[j]->getIdxSymbol() << ", idx of section: "
+      // << tempRelocationTable[j]->getIdxSection() << std::endl;
 
       std::pair<size_t, size_t> sectionAndOffset = mappingFileSectionToSectionOffset[{i, tempSection->getIdxOfSection()}];
       size_t startOffset = sectionAndOffset.second;
@@ -598,7 +602,7 @@ void Linker::fixAddresses()
   fixVirtualAddressOfSections();
 }
 
-void Linker::makeExecElfFile(const std::string &name)
+void Linker:: makeExecElfFile(const std::string &name)
 {
   size_t sizeOfFile = 10 * sizeof(size_t);
   std::vector<std::string> memInitializerContent;
@@ -968,6 +972,10 @@ void Linker::fixSymbolTable(std::vector<std::vector<Symbol*>>& array, const size
 {
   for(size_t i = 0; i < array[numOfTable].size(); i++)
   {
+    if(array[numOfTable][i]->getType() == Symbol::Type::Macro)
+    {
+      continue;
+    }
     if(array[numOfTable][i]->getSection() == idxSection && array[numOfTable][i]->getValue() > offset)
     {
       std::vector<RelocationEntry*> tempRelocTable = arrayOfRelocationEntryTables[numOfTable];
@@ -1102,6 +1110,10 @@ size_t Linker::findValueOfSymbol(const size_t &currentFile, const std::string &s
         size_t value;
         std::pair<size_t, size_t> symbolSectionAndOffset = mappingFileSectionToSectionOffset[{i, tempSymbol->getSection()}];
         Section* newSymbolSection = linkerSections[symbolSectionAndOffset.first];
+        if(tempSymbol->getType() == Symbol::Type::Macro)
+        {
+          return tempSymbol->getValue();
+        }
         value = newSymbolSection->getVirtualAddress() + symbolSectionAndOffset.second + tempSymbol->getValue();
         return value;
       }

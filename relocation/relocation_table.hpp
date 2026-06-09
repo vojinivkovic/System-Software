@@ -15,6 +15,7 @@ public:
   static void addRelocationEntry(RelocationEntry* newEntry) { table.push_back(newEntry); }
   static std::vector<RelocationEntry*> getTable() { return table; }
   static void fixRelocationEntry(size_t idx, size_t newIdxOfSymbol, size_t addend);
+  static void addjustRelocationOffset(const size_t& idxSection, const size_t& offsetOfSymbol, const size_t& shift);
   static void makeSection();
   static std::vector<RelocationEntry*> readRelocationTableFromElfFile(const std::string& fileName, const Section* relaTable);
 private:

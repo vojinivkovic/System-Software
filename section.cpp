@@ -7,6 +7,7 @@
 #include "macro/macro_table.hpp"
 #include "aux/exceptions.hpp"
 #include "aux/string_table.hpp"
+#include "relocation/relocation_table.hpp"
 #include <iostream>
 #include <algorithm>
 #include <fstream>
@@ -134,8 +135,16 @@ void Section::insertValueInContent(const uint32_t &value, size_t offset)
   {
     uint8_t tempReg = (content[offset + 1] >> 4 ) & 0xF;
     content.erase(content.begin() + offset, content.begin() + offset + 4);
+    locationCounter -= 4;
     std::vector<uint8_t> tempInstr = transformLoadInstruction(tempReg, value);
+    for(size_t i = 0; i + 3 < tempInstr.size(); i += 4)
+    {
+      std::reverse(tempInstr.begin() + i, tempInstr.begin() + i + 4);
+    }
     content.insert(content.begin() + offset, tempInstr.begin(), tempInstr.end());
+    locationCounter += tempInstr.size();
+    RelocationTable::addjustRelocationOffset(idxSection, offset, tempInstr.size() - 4);
+    SymbolTable::adjustSymbolValues(idxSection, offset, tempInstr.size() - 4);
   }
 }
 

@@ -22,10 +22,13 @@ public:
   static bool checkDefinition(Symbol*& undefinedSymbol);
   static void resolveForwardReference();
   static std::vector<Symbol*> getSymbolTable() { return table; }
+  static void adjustSymbolValues(const size_t& idxSection, const size_t& offsetOfSymbol, const size_t& shift);
   static void makeSection();
   static void addContentInSection();
   static std::string getNameOfSymbol(const size_t& name);
   static std::vector<Symbol*> readSymbolsFromElfFile(const std::string& fileName, const Section* symTable);
+  static Symbol* getSymbolBasedOnIdx(const size_t& idx) { return table[idx]; }
+
 
 private:
   static size_t currentSection;

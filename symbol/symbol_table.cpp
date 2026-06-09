@@ -123,6 +123,17 @@ void SymbolTable::resolveForwardReference()
   }
 }
 
+void SymbolTable::adjustSymbolValues(const size_t & idxSection, const size_t & offsetOfSymbol, const size_t & shift)
+{
+  for(auto iSymbol : table)
+  {
+    if(iSymbol->getSection() == idxSection && iSymbol->getValue() > offsetOfSymbol)
+    {
+      iSymbol->setValue(iSymbol->getValue() + shift);                                                                                                                                         
+    }
+  }
+}
+
 void SymbolTable::makeSection()
 {
   sectionSymbolTable = new Section(".symtable", Section::SectionType::SymTabSection);

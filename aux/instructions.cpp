@@ -47,7 +47,13 @@ bool Instructions::resolveSymbol(const std::string &symbol, uint32_t* value, boo
   Symbol* tempSymbol = SymbolTable::findSymbol(symbol);
   Macro* tempMacro = MacroTable::findMacro(symbol);
   
-
+  if(tempSymbol)
+  {
+    if(tempSymbol->getType() == Symbol::Type::Macro)
+    {
+      tempSymbol = nullptr;
+    }
+  }
   if(!tempSymbol && !tempMacro)
   {
     if(acknowledgeSymbol)

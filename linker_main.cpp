@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
     std::cout << "Multiple definitions finished" << std::endl;
     if(isHex)
     {
-      Linker::checkUnresolvedSymbols;
+      Linker::checkUnresolvedSymbols();
       std::cout << "Unresolved symbols finished" << std::endl;
     }
     Linker::makeLinkerSections();

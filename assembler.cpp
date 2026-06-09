@@ -33,6 +33,7 @@ Section *Assembler::findSection(size_t nameOfSection)
 
 void Assembler::afterFirstPass()
 {
+  MacroTable::setValuesOfSymbols();
   checkIfSymbolsDefined();
   checkIfMacrosDefined();
   SymbolTable::resolveForwardReference();

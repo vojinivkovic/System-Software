@@ -31,6 +31,8 @@ void Timer::poll()
   std::chrono::steady_clock::time_point currentTick = std::chrono::steady_clock::now();
   if(currentTick - lastTick >= period)
   {
+    std::cout << "Timer interrupt" << std::endl;
+    std::cout << "STATUS REG [TIMER] = " << RegisterFile::readFromSPRegister(0) << std::endl;
     lastTick = currentTick;
     RegisterFile::writeToSPRegister(2, 2);
   }

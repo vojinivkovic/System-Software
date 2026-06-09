@@ -202,16 +202,24 @@ void directiveEqu(const std::vector<MacroParameter> &parameters)
   if(tempSymbol)
   {
 
-    SymbolTable::removeSymbolFromTable(tempSymbol);
+    //SymbolTable::removeSymbolFromTable(tempSymbol);
     
     tempMacro = new Macro(MacroTable::getOffsetInTableOfMacroString(), parameters[1].expression,
                                 dependencies,tempSymbol->getForwardReference());
-    
+    MacroTable::addMapping(MacroTable::getSizeOfMacroTable(), tempSymbol->getIdx());
+    tempSymbol->setType(Symbol::Type::Macro);
+    tempSymbol->clearForwardReferemce();
   }
   else
   {
+    Symbol* newSymbol = new Symbol(SymbolTable::getNewIdxInSymbolTable(), SymbolTable::getOffsetInTableOfSymbolString(), 0, 0, 0, 
+    Symbol::Binding::NoBinding, Symbol::Type::Macro, Symbol::Scope::NoScope, false);
+    SymbolTable::addSymbol(nameOfMacro, newSymbol);
+
+
     tempMacro = new Macro(MacroTable::getOffsetInTableOfMacroString(), parameters[1].expression,
                                 dependencies, {});
+    MacroTable::addMapping(MacroTable::getSizeOfMacroTable(), newSymbol->getIdx());
   }
 
   MacroTable::AddMacro(nameOfMacro, tempMacro);

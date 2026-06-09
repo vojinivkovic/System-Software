@@ -29,7 +29,8 @@ public:
     Function, 
     Section,
     String,
-    WordArray
+    WordArray, 
+    Macro
   };
 
   Symbol(const size_t& idx_, 
@@ -112,8 +113,10 @@ public:
   std::vector<ForwardReference*> getForwardReference() const { return tableForwardReference; }
 
   void addForwardReference(ForwardReference* newReference) { tableForwardReference.push_back(newReference); }
+  void clearForwardReferemce() { tableForwardReference.clear(); }
 
   std::vector<uint8_t> getLittleEndianFormatOfSymbol() const;
+  
 
 private: 
   size_t idx, name, size, value, section;
