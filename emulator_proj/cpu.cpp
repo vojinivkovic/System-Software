@@ -376,21 +376,40 @@ void CPU::instructionLoad()
       break;
     case 0x3:
       valueRegA = Memory::memRead4bytes(valueRegB);
-      // if(regA == 15) 
-      // {
-      //   // std::cout << "PC CHANGE[POP]: 0x"
-      //   // << std::hex
-      //   // << std::setw(8)
-      //   // << std::setfill('0')
-      //   // << valueRegA
-      //   // << std::endl;
-
-      //   // std::cout << "STATUS REG: " << RegisterFile::readFromSPRegister(0) << std::endl;
-      // }
-      RegisterFile::writeToGPRegister(regA, valueRegA);
-
       valueRegB = valueRegB + signedDisp;
       RegisterFile::writeToGPRegister(regB, valueRegB);
+      if(regA == 15) 
+      {
+        // std::cout << "PC CHANGE[POP]: 0x"
+        // << std::hex
+        // << std::setw(8)
+        // << std::setfill('0')
+        // << valueRegA
+        // << std::endl;
+        uint32_t newPC = valueRegA;
+        //std::cout << "STATUS REG: " << RegisterFile::readFromSPRegister(0) << std::endl;
+        fetchInstruction();
+        if(checkIfPopStatus())
+        {
+          extractInstructionFiels(regA, regB, regC, disp);
+          valueRegB = RegisterFile::readFromGPRegister(regB);
+          valueRegC = RegisterFile::readFromGPRegister(regC);
+
+          valueRegA = Memory::memRead4bytes(valueRegB);
+          RegisterFile::writeToSPRegister(0, valueRegA);
+
+          signedDisp = static_cast<int16_t>(disp);
+          valueRegB = valueRegB + signedDisp;
+          RegisterFile::writeToGPRegister(regB, valueRegB);
+        }
+
+        RegisterFile::writeToGPRegister(15, newPC); 
+      }
+      else
+      {
+        RegisterFile::writeToGPRegister(regA, valueRegA);
+      }
+
       break;
     case 0x4:
       RegisterFile::writeToSPRegister(regA, valueRegB);
@@ -409,7 +428,7 @@ void CPU::instructionLoad()
       RegisterFile::writeToSPRegister(regA, valueRegA);
       
       // std::cout << "WRITING TO SP REG [" << regA << "] = " << valueRegA << std::endl;
-
+      //std::cout << "IRET" << std::endl;
       valueRegB = valueRegB + signedDisp;
       RegisterFile::writeToGPRegister(regB, valueRegB);
       break;
@@ -447,7 +466,7 @@ void CPU::checkForInterrupt()
   {
     uint32_t regPCValue = RegisterFile::readFromGPRegister(15);
 
-    // std::cout << "JUMP TO HANDLER" << std::endl;
+    //std::cout << "JUMP TO HANDLER" << std::endl;
     Memory::pushOnStack(regStatusValue);
     Memory::pushOnStack(regPCValue);
 
@@ -490,4 +509,16 @@ void CPU::extractInstructionFiels(uint8_t &regA, uint8_t &regB, uint8_t &regC, u
   regB = extractRegisterB();
   regC = extractRegisterC();
   disp = extractDisplay();
+}
+
+bool CPU::checkIfPopStatus()
+{
+  uint8_t mode, regA, regB, regC;
+  uint16_t disp;
+  extractInstructionFiels(regA, regB, regC, disp);
+  if(instructionRegister[0] == 0x97 && regA == 0) 
+  {
+    return true;
+  }
+  return false;
 }

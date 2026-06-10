@@ -126,14 +126,14 @@ void Section::insertContent(const uint32_t &value)
 
 void Section::insertValueInContent(const uint32_t &value, size_t offset)
 {
-  if(content[offset] == 0x92 || content[offset] == 0x80)
+  if(content[offset + 3] == 0x92 || content[offset + 3] == 0x80)
   {
-    content[offset + 2] = (content[offset + 2] & 0xF0) | ((value >> 8) & 0xF);
-    content[offset + 3] = value & 0xFF;
+    content[offset + 1] = (content[offset + 1] & 0xF0) | ((value >> 8) & 0xF);
+    content[offset] = value & 0xFF;
   }
   else
   {
-    uint8_t tempReg = (content[offset + 1] >> 4 ) & 0xF;
+    uint8_t tempReg = (content[offset + 2] >> 4 ) & 0xF;
     content.erase(content.begin() + offset, content.begin() + offset + 4);
     locationCounter -= 4;
     std::vector<uint8_t> tempInstr = transformLoadInstruction(tempReg, value);

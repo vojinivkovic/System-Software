@@ -22,6 +22,7 @@ void Timer::changeConfig()
   {
     throw CPUErrors(ErrorType::ErrorUndefinedTimerConfig, "There are only 8 timer configs available.");
   }
+  std::cout << "option: " << optionIdx << std::endl;
   period = std::chrono::milliseconds(tableConfig[optionIdx]);
 
 } 
@@ -31,8 +32,8 @@ void Timer::poll()
   std::chrono::steady_clock::time_point currentTick = std::chrono::steady_clock::now();
   if(currentTick - lastTick >= period)
   {
-    std::cout << "Timer interrupt" << std::endl;
-    std::cout << "STATUS REG [TIMER] = " << RegisterFile::readFromSPRegister(0) << std::endl;
+    // std::cout << "Timer interrupt" << std::endl;
+    // std::cout << "STATUS REG [TIMER] = " << RegisterFile::readFromSPRegister(0) << std::endl;
     lastTick = currentTick;
     RegisterFile::writeToSPRegister(2, 2);
   }

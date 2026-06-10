@@ -19,7 +19,7 @@ public:
   }
   static void writeToSPRegister(const uint8_t& regNum, const uint32_t& value) 
   { 
-    std::cout << "write to SP REG[" << std::to_string(regNum) << "]: " << value << std::endl;
+   // std::cout << "write to SP REG[" << std::to_string(regNum) << "]: " << value << std::endl;
     specialPurposeRegisters[regNum] = value; 
   }
   static uint32_t readFromGPRegister(const uint8_t& regNum) { return registers[regNum]; }

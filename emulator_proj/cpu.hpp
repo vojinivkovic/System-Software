@@ -48,6 +48,7 @@ private:
   static uint8_t extractRegisterC();
   static uint16_t extractDisplay();
   static void extractInstructionFiels(uint8_t& regA, uint8_t& regB, uint8_t& regC, uint16_t& disp);
+  static bool checkIfPopStatus();
   static size_t numOfInstructions;
 
 };
