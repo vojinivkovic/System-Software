@@ -17,6 +17,7 @@ void CPU::initializeCPU(const std::string& fileName)
   RegisterFile::writeToGPRegister(15, 0x40000000);
   Terminal::initializeTerminal();
   Timer::initializeTimer();
+  Memory::getMemoryContent("mem_b_case.txt");
 }
 
 void CPU::runProgram()

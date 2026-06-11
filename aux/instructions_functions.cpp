@@ -85,17 +85,17 @@ static uint32_t resolveLiteral(const std::string& literal)
 std::vector<uint8_t> transformLoadInstruction(const uint8_t& destReg, uint32_t operand)
 {
   std::vector<uint8_t> instr;
-  uint8_t victimReg;
+  uint8_t victimReg = 12;
   uint8_t dirtyReg = 13;
 
-  for(size_t i = 1; i <= 12; i++)
-  {
-    if(i != destReg)
-    {
-      victimReg = i;
-      break;
-    }
-  }
+  // for(size_t i = 1; i <= 12; i++)
+  // {
+  //   if(i != destReg)
+  //   {
+  //     victimReg = i;
+  //     break;
+  //   }
+  // }
   //PUSH victimReg ON STACK
   instr.push_back(0x81); 
   instr.push_back(0xE0);

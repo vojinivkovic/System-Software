@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <iomanip>
 #include "memory_constant.hpp"
 #include "../aux/exceptions.hpp"
 #include "terminal.hpp"
@@ -117,4 +118,31 @@ uint32_t Memory::memRead4bytes(const uint32_t &address)
     value |= static_cast<uint32_t>(byteContent) << 8 * i;
   }
   return value;
+}
+
+void Memory::getMemoryContent(const std::string &fileName)
+{
+  uint32_t beginAddress = 0x40000000;
+  uint32_t value;
+
+  std::ofstream out(fileName);
+
+  for(uint32_t currAddress = beginAddress; currAddress < 0x4000055B; currAddress += 4)
+  {
+    //value = memRead4bytes(currAddress);
+    out << std::hex << std::uppercase
+    << std::setw(8) << std::setfill('0') << currAddress
+    << ": ";
+
+    for (int i = 0; i < 4; i++)
+    {
+        uint8_t byte = memRead(currAddress + i);
+
+        out << std::setw(2) << std::setfill('0')
+            << static_cast<unsigned>(byte) << ' ';
+
+    }
+
+    out << '\n';
+  }
 }
