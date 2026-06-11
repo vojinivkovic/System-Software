@@ -18,6 +18,7 @@ public:
 
   StringTable(STType tableType) : type(tableType) {}
   StringTable(STType tableType, const std::string& content) : type(tableType), tableOfNames(content) {}
+  ~StringTable() = default;
   void addString(const std::string& name);
   size_t getOffset() { return tableOfNames.size(); }
   std::string::size_type findString(const std::string& name) const;

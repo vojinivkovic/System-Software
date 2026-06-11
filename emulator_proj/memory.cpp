@@ -146,3 +146,11 @@ void Memory::getMemoryContent(const std::string &fileName)
     out << '\n';
   }
 }
+
+void Memory::cleanMemory()
+{
+  for(const auto& [key, value] : pageTable)
+  {
+    delete value;
+  }
+}

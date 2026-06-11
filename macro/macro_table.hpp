@@ -23,6 +23,7 @@ public:
   static std::vector<std::string> getTextRepresentationOfMacros();
   static void addMapping(const size_t& idxMacro, const size_t& idxSymbol);
   static void setValuesOfSymbols();
+  static void deleteMacroTable();
 
 private:
   static std::vector<Macro*> table;

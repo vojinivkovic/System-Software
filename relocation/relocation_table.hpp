@@ -18,7 +18,8 @@ public:
   static void addjustRelocationOffset(const size_t& idxSection, const size_t& offsetOfSymbol, const size_t& shift);
   static void makeSection();
   static std::vector<RelocationEntry*> readRelocationTableFromElfFile(const std::string& fileName, const Section* relaTable);
-private:
+  static void deleteTableOfRelocationEntries();
+  private:
   static std::vector<RelocationEntry*> table;
 };
 

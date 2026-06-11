@@ -32,6 +32,7 @@ public:
   static void makeExecElfFile(const std::string& name);
   static void execPipeline();
   static void relocPipeline();
+  static void cleanup();
 
 private:
 
@@ -64,7 +65,15 @@ private:
   static void addContentInSectionSecStrTable();
   static bool checkSectionsOverlapping(const size_t& currentStartSection);
   static void fixSymbolTable(std::vector<std::vector<Symbol*>>& array, const size_t& numOfTable, const size_t& offset, const size_t& idxSection);
-
+  static void deleteSymbolStringTables();
+  static void deleteSectionStringTables();
+  static void deleteFilesSections();
+  static void deleteFilesSymbolTables();
+  static void deleteFilesRelocationTables();
+  static void deleteLinkersSections();
+  static void deleteLinkersSymbolTable();
+  static void deleteLinkersRelocationTable();
+  static void deleteAuxiliarySections();
 };
 
 #endif

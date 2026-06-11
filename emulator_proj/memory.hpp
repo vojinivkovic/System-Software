@@ -17,6 +17,7 @@ public:
   static uint8_t memRead(const uint32_t& address);
   static uint32_t memRead4bytes(const uint32_t& address);
   static void getMemoryContent(const std::string& fileName);
+  static void cleanMemory();
 private:
   static std::unordered_map<uint32_t, Page*> pageTable;
 };

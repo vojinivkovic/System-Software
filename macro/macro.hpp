@@ -15,6 +15,14 @@ class Macro
     Macro(const size_t& name_, const std::vector<Token>& expression_, 
       const std::vector<std::string> dependencySymbol_, const std::vector<ForwardReference*>& fReference);
     
+    ~Macro() 
+    { 
+      for(auto iReference : tableForwardReference)
+      {
+        delete iReference;
+      }
+    }  
+
     size_t getName() const { return name; }
     bool getDefined() const { return defined; }
     std::int32_t getValue() const {return value; }

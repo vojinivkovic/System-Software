@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
       Linker::relocPipeline();
       Linker::makeRelocElfFile(outputName);
     }
-
+    Linker::cleanup();
   }
   catch(LinkerErrors& err)
   {

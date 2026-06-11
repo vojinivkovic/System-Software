@@ -107,3 +107,11 @@ std::vector<RelocationEntry *> RelocationTable::readRelocationTableFromElfFile(c
   }
   return arrayOfRelocationEntries;
 }
+
+void RelocationTable::deleteTableOfRelocationEntries()
+{
+  for(auto iReloc : table)
+  {
+    delete iReloc;
+  }
+}

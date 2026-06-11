@@ -18,9 +18,10 @@ public:
   static size_t getNumberOfSections() { return arrayOfSections.size(); }
   static Section* findSection(size_t nameOfSection);
   static void afterFirstPass();
+  static void cleanup();
   static std::vector<Section*> getSections() { return arrayOfSections; }
   static void makeELFFiles(const std::string& name);
-
+  static void deleteTableOfSections();
 
 private:
   static Section* currentSection;

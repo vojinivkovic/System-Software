@@ -68,6 +68,7 @@ int main(int argc, char* argv[])
     fclose(yyin);
     Assembler::afterFirstPass();
     Assembler::makeELFFiles(outputName);
+    Assembler::cleanup();
   }
   catch(AssemblerErrors& err)
   {

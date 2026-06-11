@@ -8,6 +8,7 @@ class Page
 public:
 
   Page() = default;
+  ~Page() = default;
   void write(const uint32_t& idx, const uint8_t& content);
   uint8_t read(const uint32_t& idx) { return pageMemory[idx]; }
 

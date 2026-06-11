@@ -246,3 +246,13 @@ std::vector<Symbol *> SymbolTable::readSymbolsFromElfFile(const std::string &fil
   }
   return arrayOfSymbols;
 }
+
+void SymbolTable::deleteSymbolTable()
+{
+  for(auto iSym : table)
+  {
+    delete iSym;
+  }
+  delete tableOfSymbolString;
+  delete sectionSymbolTable;
+}

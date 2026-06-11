@@ -134,3 +134,12 @@ void MacroTable::setValuesOfSymbols()
     tempSymbol->setValue(table[i]->getValue());
   }
 }
+
+void MacroTable::deleteMacroTable()
+{
+  for(auto iMacro : table)
+  {
+    delete iMacro;
+  }
+  delete tableOfMacroString;
+}

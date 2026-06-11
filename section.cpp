@@ -227,6 +227,11 @@ void Section::makeContentOfSectionsNames()
   tableOfSectionString->makeContentOfSection();
 }
 
+void Section::deleteTableOfSectionStrings()
+{
+  delete tableOfSectionString;
+}
+
 static std::vector<uint8_t> convertToLittleEndiand(size_t classMember)
 {
   std::vector<uint8_t> littleEndianFormat;

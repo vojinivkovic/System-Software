@@ -19,6 +19,7 @@ int main(int argc, char* argv[])
     }
     CPU::initializeCPU(fileName);
     CPU::runProgram();
+    CPU::cleanup();
   }
   catch(CPUErrors& err)
   {

@@ -47,6 +47,11 @@ void CPU::runProgram()
   RegisterFile::getStateOfRegisterFile();
 }
 
+void CPU::cleanup()
+{
+  Memory::cleanMemory();
+}
+
 void CPU::fetchInstruction()
 {
   uint32_t pc = RegisterFile::readFromGPRegister(15);

@@ -29,6 +29,7 @@ public:
   };
   Section(const std::string& sectionName, const SectionType& type_);
   Section(const size_t& name_, const Section::SectionType& type_, const uint32_t& vAddress_, const size_t& offset_, const size_t& size_, const size_t& sizeOfEntry_, const size_t& idx_);
+  ~Section() = default;
   size_t getLocationCounter() const { return locationCounter;}
   size_t getIdxOfSection() const { return idxSection; }
   size_t getVirtualAddress() const { return virtualAddress; }
@@ -59,6 +60,7 @@ public:
   static void makeSectionOfSectionNames();
   static std::vector<Section*> readSectionHeader(const std::string& fileName, const size_t& startOfHeader, const size_t& numOfSections);
   static void makeContentOfSectionsNames();
+  static void deleteTableOfSectionStrings();
   std::vector<uint8_t> getLittleEndiandOfSection();
   std::string getTextFormatOfSection();
   std::string getStringSectionName();

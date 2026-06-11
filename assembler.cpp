@@ -46,6 +46,14 @@ void Assembler::afterFirstPass()
   Section::makeContentOfSectionsNames(); 
 }
 
+void Assembler::cleanup()
+{
+  deleteTableOfSections();
+  SymbolTable::deleteSymbolTable();
+  RelocationTable::deleteTableOfRelocationEntries();
+  MacroTable::deleteMacroTable();
+}
+
 void Assembler::makeELFFiles(const std::string &name)
 {
   size_t sizeOfFile = 10 * sizeof(size_t);
@@ -114,7 +122,13 @@ void Assembler::makeELFFiles(const std::string &name)
   }
 }
 
-
+void Assembler::deleteTableOfSections()
+{
+  for(auto iSection : arrayOfSections)
+  {
+    delete iSection;
+  }
+}
 
 void Assembler::checkIfSymbolsDefined()
 {

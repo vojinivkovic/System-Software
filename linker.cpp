@@ -683,6 +683,19 @@ void Linker::relocPipeline()
   addContentInSectionSecStrTable();
 }
 
+void Linker::cleanup()
+{
+  deleteSymbolStringTables();
+  deleteSectionStringTables();
+  deleteFilesSections();
+  deleteFilesSymbolTables();
+  deleteFilesRelocationTables();
+  deleteLinkersSections();
+  deleteLinkersSymbolTable();
+  deleteLinkersRelocationTable();
+  deleteAuxiliarySections();
+}
+
 void Linker::makeRelocElfFile(const std::string &name)
 {
   size_t sizeOfFile = 10 * sizeof(size_t);
@@ -995,6 +1008,103 @@ void Linker::fixSymbolTable(std::vector<std::vector<Symbol*>>& array, const size
       }
       array[numOfTable][i]->setValue(array[numOfTable][i]->getValue() + 40);
     }
+  }
+}
+
+void Linker::deleteSectionStringTables()
+{
+  for(auto iTable : arrayOfSectionStringTables)
+  {
+    delete iTable;
+  }
+  if(sectionStringTable)
+  {
+    delete sectionStringTable;
+  }
+}
+
+void Linker::deleteFilesSections()
+{
+  for(auto iTableSection : arrayOfFilesSections)
+  {
+    for(auto iSection : iTableSection)
+    {
+      delete iSection;
+    }
+  }
+}
+
+void Linker::deleteFilesSymbolTables()
+{
+  for(auto iTableSymbol : arrayOfSymbolTables)
+  {
+    for(auto iSymbol : iTableSymbol)
+    {
+      delete iSymbol;
+    }
+  }
+}
+
+void Linker::deleteFilesRelocationTables()
+{
+  for(auto iTableReloc : arrayOfRelocationEntryTables)
+  {
+    for(auto iReloc : iTableReloc)
+    {
+      delete iReloc;
+    }
+  }
+}
+
+void Linker::deleteLinkersSections()
+{
+  for(auto iSection : linkerSections)
+  {
+    delete iSection;
+  }
+}
+
+void Linker::deleteLinkersSymbolTable()
+{
+  for(auto iSymbol : linkerSymbols)
+  {
+    delete iSymbol;
+  }
+}
+
+void Linker::deleteLinkersRelocationTable()
+{
+  for(auto iReloc : linkerReloactionEntries)
+  {
+    delete iReloc;
+  }
+}
+
+void Linker::deleteAuxiliarySections()
+{
+  if(sectionSymTable)
+  {
+    delete sectionSymTable;
+  }
+  if(sectionSymStrTable)
+  {
+    delete sectionSymStrTable;
+  }
+  if(sectionSecStrTable)
+  {
+    delete sectionSecStrTable;
+  }
+}
+
+void Linker::deleteSymbolStringTables()
+{
+  for(auto iTable : arrayOfSymbolStringsTables)
+  {
+    delete iTable;
+  }
+  if(symbolStringTable)
+  {
+    delete symbolStringTable;
   }
 }
 

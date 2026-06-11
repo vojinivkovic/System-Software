@@ -88,7 +88,14 @@ public:
               defined = false;
             }
            }
-
+  
+  ~Symbol() 
+  {
+    for(auto iReference : tableForwardReference)
+    {
+      delete iReference;
+    }
+  }          
   size_t getName() const { return name; }
   size_t getSize() const { return size; }
   void setSize(size_t size_) { size = size_; }

@@ -28,7 +28,7 @@ public:
   static std::string getNameOfSymbol(const size_t& name);
   static std::vector<Symbol*> readSymbolsFromElfFile(const std::string& fileName, const Section* symTable);
   static Symbol* getSymbolBasedOnIdx(const size_t& idx) { return table[idx]; }
-
+  static void deleteSymbolTable();
 
 private:
   static size_t currentSection;

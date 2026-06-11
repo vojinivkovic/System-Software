@@ -25,6 +25,7 @@ public:
   static void initializeCPU(const std::string& fileName);
   static void runProgram();
   static size_t getNumberOfInstructions() { return numOfInstructions; }
+  static void cleanup();
 private:
   static void fetchInstruction();
   static InstructionOPCodes decode();
