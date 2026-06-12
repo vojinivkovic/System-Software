@@ -49,6 +49,7 @@ void Assembler::afterFirstPass()
 void Assembler::cleanup()
 {
   deleteTableOfSections();
+  Section::deleteTableOfSectionStrings();
   SymbolTable::deleteSymbolTable();
   RelocationTable::deleteTableOfRelocationEntries();
   MacroTable::deleteMacroTable();
