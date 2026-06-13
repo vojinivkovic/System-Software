@@ -62,8 +62,6 @@ int main(int argc, char* argv[])
     }
 
     Assembler::initializeAssembler();
-    //extern int yydebug;
-    //yydebug = 1;
     yyparse();
     fclose(yyin);
     Assembler::afterFirstPass();
@@ -72,7 +70,8 @@ int main(int argc, char* argv[])
   }
   catch(AssemblerErrors& err)
   {
-    if(err.getErrorType() == ErrorType::ErrorUndefinedSymbol || err.getErrorType() == ErrorType::ErrorUndefinedMacro)
+    if(err.getErrorType() == ErrorType::ErrorUndefinedSymbol || err.getErrorType() == ErrorType::ErrorUndefinedMacro 
+    || err.getErrorType() == ErrorType::ErrorInvalidEQUExpression)
     {
       std::cout << "Error[" << err.toString(err.getErrorType()) << "]" << std::endl
       << err.what() << std::endl;

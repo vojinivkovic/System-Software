@@ -10,6 +10,7 @@ enum class ErrorType
   ErrorTooFewArguments,
   ErrorInvalidArgument,
   ErrorInvalidAddressing,
+  ErrorInvalidEQUExpression,
   ErrorSymbolAlreadyDefined,
   ErrorInvalidSymbolInMacroExpression,
   ErrorUndefinedSymbol,
@@ -40,6 +41,7 @@ public:
           case ErrorType::ErrorInvalidAddressing: return "InvalidAddressing";
           case ErrorType::ErrorSymbolAlreadyDefined: return "SymbolAlreadyDefined";
           case ErrorType::ErrorInvalidSymbolInMacroExpression: return "SymbolInMacroExpression";
+          case ErrorType::ErrorInvalidEQUExpression: return "Expression defined in [.equ] directive is not valid";
           default: return "UnknownError";
       }
       

@@ -28,7 +28,6 @@ Macro *MacroTable::findMacro(const std::string &name)
 
 void MacroTable::AddMacro(const std::string &name, Macro *newMacro)
 {
-  std::cout << "Macro was added" << std::endl;
   tableOfMacroString->addString(name);
   table.push_back(newMacro);
 }

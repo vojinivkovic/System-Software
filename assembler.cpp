@@ -49,7 +49,6 @@ void Assembler::afterFirstPass()
 void Assembler::cleanup()
 {
   deleteTableOfSections();
-  Section::deleteTableOfSectionStrings();
   SymbolTable::deleteSymbolTable();
   RelocationTable::deleteTableOfRelocationEntries();
   MacroTable::deleteMacroTable();
@@ -61,8 +60,6 @@ void Assembler::makeELFFiles(const std::string &name)
   std::vector<uint8_t> binaryContent;
   std::vector<std::string> textContent;
   std::string sectionName;
-
-  std::cout << "Making Elf files" << std::endl;
 
   for(auto iSection : arrayOfSections)
   {

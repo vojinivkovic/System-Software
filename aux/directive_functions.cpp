@@ -189,7 +189,6 @@ void directiveEqu(const std::vector<MacroParameter> &parameters)
   Symbol* tempSymbol = SymbolTable::findSymbol(nameOfMacro);
   std::vector<std::string> dependencies;
   Macro* tempMacro;
-  std::cout << "Start execution of directive .equ" << std::endl;
   exceptionDirectiveEqu(parameters);
   for(auto iToken : parameters[1].expression)
   {
@@ -201,8 +200,6 @@ void directiveEqu(const std::vector<MacroParameter> &parameters)
   
   if(tempSymbol)
   {
-
-    //SymbolTable::removeSymbolFromTable(tempSymbol);
     
     tempMacro = new Macro(MacroTable::getOffsetInTableOfMacroString(), parameters[1].expression,
                                 dependencies,tempSymbol->getForwardReference());

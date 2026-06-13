@@ -7,8 +7,9 @@ uint32_t RegisterFile::specialPurposeRegisters[3] = {};
 
 void RegisterFile::getStateOfRegisterFile()
 {
-  std::cout << std::endl <<"----------------------------------" << std::endl;
-  std::cout << "STATE OF REGISTERS" << std::endl;
+  std::cout << std::endl <<"-------------------------------------------------" << std::endl;
+  std::cout << "Emulated processor executed halt instruction" << std::endl;
+  std::cout << "Emulated processor state:" << std::endl;
   for(int i = 0; i < 16; i++)
   {
       std::cout << "r" << i

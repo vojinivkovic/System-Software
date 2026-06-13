@@ -61,7 +61,7 @@ static uint32_t resolveLiteral(const std::string& literal)
         (literal[pos + 1] == 'x' || literal[pos + 1] == 'X'))
     {
         base = 16;
-        pos += 2;   // skip 0x
+        pos += 2;
     }
     else if (pos + 1 < literal.size() &&
              literal[pos] == '0' &&
@@ -88,14 +88,6 @@ std::vector<uint8_t> transformLoadInstruction(const uint8_t& destReg, uint32_t o
   uint8_t victimReg = 12;
   uint8_t dirtyReg = 13;
 
-  // for(size_t i = 1; i <= 12; i++)
-  // {
-  //   if(i != destReg)
-  //   {
-  //     victimReg = i;
-  //     break;
-  //   }
-  // }
   //PUSH victimReg ON STACK
   instr.push_back(0x81); 
   instr.push_back(0xE0);
@@ -149,10 +141,6 @@ std::vector<uint8_t> transformLoadInstruction(const uint8_t& destReg, uint32_t o
   instr.push_back(0x00);
   instr.push_back(0x00);
 
-  // for(size_t i = 0; i + 3 < instr.size(); i += 4)
-  // {
-  //   std::reverse(instr.begin() + i, instr.begin() + i + 4);
-  // }
   return instr;
 } 
 
@@ -782,22 +770,6 @@ static std::vector<uint8_t>transformMemoryDirectStore(const std::vector<Argument
   std::vector<uint8_t> instr, tempInstr;
   uint32_t operand;
   uint8_t victimReg = 13;
-  // for(size_t i = 1; i <= 13; i++)
-  // {
-  //   if(i == arguments[0].registerNum)
-  //   {
-  //     victimReg = i;
-  //     break;
-  //   }
-  // }
-
-  //PUSH victimReg
-  // instr.push_back(0x81); 
-  // instr.push_back(0xE0);
-  // instr.push_back((victimReg << 4) | 0xF);
-  // instr.push_back(0xFC);
-
-  // Assembler::getCurrentSection()->incrementLocationCounter(4);
 
   if(arguments[1].type == ArgumentType::OperandLiteral)
   {
@@ -809,11 +781,6 @@ static std::vector<uint8_t>transformMemoryDirectStore(const std::vector<Argument
   {
     if(Instructions::resolveSymbol(arguments[1].variable, &operand))
     {
-      // if((int)operand < 0)
-      // {
-      //       throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects positive value for memory direct addressing",
-      // Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
-      // }
       tempInstr = transformLoadInstruction(victimReg, operand);
       instr.insert(instr.end(), tempInstr.begin(), tempInstr.end());
     }
@@ -826,18 +793,12 @@ static std::vector<uint8_t>transformMemoryDirectStore(const std::vector<Argument
     }
   }
 
-  //Assembler::getCurrentSection()->incrementLocationCounter(-4);
 
   instr.push_back(0x80);
   instr.push_back(victimReg << 4);
   instr.push_back(arguments[0].registerNum << 4);
   instr.push_back(0x00);
 
-  //POP victimReg
-  // instr.push_back(0x93);
-  // instr.push_back((victimReg << 4) | 0xE);
-  // instr.push_back(0x00);
-  // instr.push_back(0x04);
 
   return instr;
 }
@@ -908,10 +869,6 @@ static std::vector<uint8_t> instructionImmediateLoad(const std::vector<Argument>
   {
     operand = resolveLiteral(arguments[0].variable);
     instr =  transformLoadInstruction(arguments[1].registerNum, operand);
-    // for(size_t i = 0; i + 3 < instr.size(); i += 4)
-    // {
-    //   std::reverse(instr.begin() + i, instr.begin() + i + 4);
-    // }
     return instr;
   }
   else
@@ -919,10 +876,6 @@ static std::vector<uint8_t> instructionImmediateLoad(const std::vector<Argument>
     if(Instructions::resolveSymbol(arguments[0].variable, &operand))
     {
       instr =  transformLoadInstruction(arguments[1].registerNum, operand);
-      // for(size_t i = 0; i + 3 < instr.size(); i += 4)
-      // {
-      //   std::reverse(instr.begin() + i, instr.begin() + i + 4);
-      // }
       return instr;
     }
     else
@@ -931,7 +884,6 @@ static std::vector<uint8_t> instructionImmediateLoad(const std::vector<Argument>
       instr.push_back(arguments[1].registerNum << 4);
       instr.push_back(0x00);
       instr.push_back(0x00);
-      //std::reverse(instr.begin(), instr.end());
       return instr;
     }
   }
@@ -949,12 +901,6 @@ static std::vector<uint8_t> transformMemoryDirectLoad(const std::vector<Argument
   {
     if(Instructions::resolveSymbol(arguments[0].variable, &operand))
     {
-      // if((int)operand < 0)
-      // {
-      //       throw AssemblerErrors(ErrorType::ErrorInvalidArgument, "Instruction [.ld] expects positive value for memory direct addressing",
-      // Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
-  
-      // }
       instr =  transformLoadInstruction(arguments[1].registerNum, operand);
     }
     else
@@ -969,11 +915,6 @@ static std::vector<uint8_t> transformMemoryDirectLoad(const std::vector<Argument
   instr.push_back((arguments[1].registerNum << 4) | (arguments[1].registerNum & 0xF));
   instr.push_back(0x00);
   instr.push_back(0X00);
-
-  // for(size_t i = 0; i + 3 < instr.size(); i += 4)
-  // {
-  //   std::reverse(instr.begin() + i, instr.begin() + i + 4);
-  // }
   return instr;
 }
 std::vector<uint8_t> instructionLoad(const std::vector<Argument> &arguments)

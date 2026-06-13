@@ -71,12 +71,10 @@ void Memory::memWrite4Bytes(const uint32_t &address, const uint32_t &content)
   }
   if(address == 0xFFFFFF00)
   {
-    //std::cout << "Display char" << std::endl;
     Terminal::displayCharacter();
   }
   else if(address == 0xFFFFFF10)
   {
-    std::cout << "Change timer config" << std::endl;
     Timer::changeConfig();
   }
 }
@@ -129,7 +127,6 @@ void Memory::getMemoryContent(const std::string &fileName)
 
   for(uint32_t currAddress = beginAddress; currAddress < 0x4000055B; currAddress += 4)
   {
-    //value = memRead4bytes(currAddress);
     out << std::hex << std::uppercase
     << std::setw(8) << std::setfill('0') << currAddress
     << ": ";

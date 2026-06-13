@@ -44,7 +44,9 @@ void ExpressionResolver::infixToPostfix(const std::vector<Token>& expr)
         
         if(currentRang < 1) 
         {
-          std::cout << "Expression is not valid. " << std::endl;
+            throw AssemblerErrors(ErrorType::ErrorInvalidEQUExpression, "Expression in [.equ] is not valid.",
+              Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+ 
           return;
         }
       }
@@ -71,7 +73,8 @@ void ExpressionResolver::infixToPostfix(const std::vector<Token>& expr)
   auxStack = {};
   if(currentRang != 1)
   {
-    std::cout << "Expression is not valid. " << std::endl;
+    throw AssemblerErrors(ErrorType::ErrorInvalidEQUExpression, "Expression in [.equ] is not valid.",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
   }
 }
 
@@ -204,7 +207,9 @@ std::int32_t ExpressionResolver::evaluate()
   }
   else
   {
-    std::cout << "Wrong Expression" << std::endl;
+    throw AssemblerErrors(ErrorType::ErrorInvalidEQUExpression, "Expression in [.equ] directive can't be evaluated.",
+      Assembler::getCurrentSection()->getSectionName(), Assembler::getCurrentSection()->getLocationCounter());
+ 
   }
   return 0;
 }

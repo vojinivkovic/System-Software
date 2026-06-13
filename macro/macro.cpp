@@ -14,7 +14,6 @@ Macro::Macro(const size_t& name_, const std::vector<Token>& expression_,
   
   Macro* tempMacro;
   Symbol* tempSymbol;
-  std::cout << "Macro constructor" << std::endl;
   for(auto it = dependencySymbol.begin() ; it != dependencySymbol.end();)
   {
     tempMacro = MacroTable::findMacro(*it);

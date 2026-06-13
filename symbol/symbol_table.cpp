@@ -19,8 +19,6 @@ void SymbolTable::addSymbol(const std::string &name, Symbol *newSymbol)
 Symbol *SymbolTable::findSymbol(const std::string &name)
 {
   std::string::size_type findIdx = tableOfSymbolString->findString(name);
-  //std::cout << "Finding symbol: " << std::to_string(findIdx) << std::endl;
-  //std::cout << "Size of table: " << std::to_string(table.size()) << std::endl;
   if(findIdx == std::string::npos)
   {
     return nullptr;
@@ -64,15 +62,6 @@ void SymbolTable::removeSymbolFromTable(const Symbol *tempSymbol)
     }
     it++;
   }
-
-  // size_t startName = tempSymbol->getName(), endName;
-
-  // std::string namesOfSymbols = tableOfSymbolString->getNames();
-
-
-  // for(endName = startName; namesOfSymbols[endName] != '\0'; endName++){}
-  // endName++;
-  // tableOfSymbolString->removeName(startName, endName);
 
 }
 
@@ -228,9 +217,6 @@ static Symbol* readSymbolFromTable(std::ifstream& inputFile)
 
 std::vector<Symbol *> SymbolTable::readSymbolsFromElfFile(const std::string &fileName, const Section *symTable)
 {
-  // std::cout << std::to_string(symTable->getSizeOfEntry()) << std::endl;
-  // std::cout << std::to_string(symTable->getLocationCounter()) << std::endl;
-  // std::cout << std::to_string(symTable->getOffsetInFile()) << std::endl;
 
   std::vector<Symbol*> arrayOfSymbols;
   size_t offset = symTable->getOffsetInFile();
@@ -254,5 +240,4 @@ void SymbolTable::deleteSymbolTable()
     delete iSym;
   }
   delete tableOfSymbolString;
-  delete sectionSymbolTable;
 }
