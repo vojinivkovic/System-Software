@@ -872,8 +872,7 @@ bool Linker::checkSectionsOverlapping(const size_t& currentStartSection)
     {
       continue;
     }
-    if((currentStartSection >= entry.first && currentStartSection <= entry.second) ||
-      (currentEndOfSection >= entry.first && currentEndOfSection <= entry.second)) 
+    if(currentStartSection <= entry.second && entry.first <= currentEndOfSection) 
     {
       return true;
     }
